@@ -3,7 +3,7 @@
   "description": "Multi-agent Dev/Review workflow for Claude Code. Provides a REVIEWER (Senior Engineer) and DEVELOPER (Mid-level Engineer) that collaborate in an automated review loop. Auto-activates on session start.",
   "version": "1.0.0",
   "author": {
-    "name": "DevFlow",
+    "name": "Tushar Banswal",
     "url": "https://github.com/Tushar-Banswal/devflow-plugin"
   },
   "homepage": "https://github.com/Tushar-Banswal/devflow-plugin",

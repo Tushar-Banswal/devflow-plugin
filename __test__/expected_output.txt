@@ -1,0 +1,12 @@
+# Expected output fragments for the DevFlow test harness
+
+The `run_tests.ps1` script checks that the following strings appear in the Claude session output (`session_output.txt`). If all are present, the test is considered passed.
+
+```
+DevFlow active
+Which model should I use
+Implementation Brief
+APPROVED
+```
+
+You can open `session_output.txt` after running the script to see the full Claude response. The file will contain the orchestrator greeting, the model‑preference question, the reviewer’s brief, the developer’s implementation summary, and the final reviewer verdict.
