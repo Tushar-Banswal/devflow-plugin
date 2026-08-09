@@ -1,0 +1,12 @@
+{
+  "name": "devflow",
+  "description": "Multi-agent Dev/Review workflow for Claude Code. Provides a REVIEWER (Senior Engineer) and DEVELOPER (Mid-level Engineer) that collaborate in an automated review loop. Auto-activates on session start.",
+  "version": "1.0.0",
+  "author": {
+    "name": "DevFlow",
+    "url": "https://github.com/your-github-username/devflow-plugin"
+  },
+  "homepage": "https://github.com/your-github-username/devflow-plugin",
+  "repository": "https://github.com/your-github-username/devflow-plugin",
+  "license": "MIT"
+}
