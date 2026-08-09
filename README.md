@@ -1,26 +1,37 @@
-# DevFlow — Claude Code Plugin
+# DevFlow — Multi-Agent Dev/Review Workflow
 
-> **Multi-agent Dev/Review workflow for Claude Code.**
-> Provides a **REVIEWER** (Senior Engineer) and a **DEVELOPER** (Mid-level Engineer) that automatically collaborate on every task through a structured review loop.
+> A structured **REVIEWER → DEVELOPER** workflow that brings senior engineering rigour to every coding task.
+> Provides a **REVIEWER** (Senior Engineer) and a **DEVELOPER** (Mid-level Engineer) that automatically collaborate through a review loop — catching security issues, architectural violations, and code quality problems before changes are accepted.
+
+> **Current implementation:** Claude Code plugin. Support for GitHub Copilot, Codex, and other coding agents is planned.
 
 ---
 
-## What it does
+## How it works
 
-When DevFlow is active, every Claude Code session follows this workflow:
+When DevFlow is active, every session follows this workflow:
 
-1. **Claude asks** which model to use for REVIEWER and DEVELOPER (defaults to the session model)
-2. **Claude waits** for your task
-3. **REVIEWER** scans the codebase, reads your `CLAUDE.md` / `AGENTS.md`, asks clarifying questions, then writes a precise implementation brief
+1. **The orchestrator asks** which model to use for REVIEWER and DEVELOPER (defaults to the active session model)
+2. **The orchestrator waits** for your task
+3. **REVIEWER** scans the codebase, reads your project rules file (`CLAUDE.md` / `AGENTS.md` / equivalent), asks clarifying questions, then writes a precise implementation brief
 4. **DEVELOPER** implements the brief with minimum footprint, self-reviews with the clean-code skill, and reports back
 5. **REVIEWER** audits all changes against security, architectural, system-design, and senior-architect checklists — returns **APPROVED** or **REJECTED** with numbered issues
 6. Loop continues until approved or until `max_iterations` is reached (default: 5)
 
 ---
 
+## Agents
+
+| Agent | Role | Persona |
+|-------|------|---------|
+| **REVIEWER** | Plans, clarifies, and audits | Senior Engineer — read-only, thinks in systems, security-first |
+| **DEVELOPER** | Implements | Mid-level Engineer — minimum footprint, asks before guessing |
+
+---
+
 ## Installation
 
-### Tier 1 — Self-Hosted (recommended)
+### Claude Code (current)
 
 Add the marketplace and install the plugin in two commands from within Claude Code:
 
@@ -35,24 +46,28 @@ If prompted, run:
 /reload-plugins
 ```
 
-### Dev / Test (one session, no install)
+#### Dev / Test (one session, no install)
 
 ```shell
 claude --plugin-dir ./devflow-plugin
 ```
 
+### GitHub Copilot / Codex *(coming soon)*
+
+Support for additional coding agents is planned. Watch this repo for updates.
+
 ---
 
 ## Usage
 
-### Automatic
+### Automatic activation
 
-DevFlow activates automatically on every session start via the `SessionStart` hook. Claude will:
+DevFlow activates automatically on every session start. The orchestrator will:
 - Announce that DevFlow is active
 - Ask which model to use for each agent
 - Wait for your task, then run the full REVIEWER → DEVELOPER → REVIEWER loop
 
-### Manual slash commands
+### Manual invocation
 
 | Command | Effect |
 |---------|--------|
@@ -63,9 +78,9 @@ DevFlow activates automatically on every session start via the `SessionStart` ho
 
 ---
 
-## Configuration via CLAUDE.md
+## Configuration
 
-Add a `devflow:` block to your project's `CLAUDE.md` to customise behaviour:
+Add a `devflow:` block to your project's rules file (`CLAUDE.md`, `AGENTS.md`, or equivalent) to customise behaviour:
 
 ```yaml
 devflow:
@@ -90,7 +105,7 @@ devflow:
 
 ## Updating
 
-The plugin uses the GitHub source pinned in `marketplace.json`. To pull the latest version:
+To pull the latest version:
 
 ```shell
 /plugin marketplace update devflow
@@ -98,13 +113,13 @@ The plugin uses the GitHub source pinned in `marketplace.json`. To pull the late
 
 ---
 
-## Validating
+## Roadmap
 
-Before submitting to the Anthropic community marketplace or distributing to a team:
-
-```shell
-claude plugin validate ./devflow-plugin --strict
-```
+- [x] Claude Code plugin
+- [ ] GitHub Copilot integration
+- [ ] Codex / OpenAI Codex CLI integration
+- [ ] Configurable agent personas
+- [ ] Custom skill support via project rules file
 
 ---
 
