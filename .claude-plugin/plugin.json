@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "author": {
     "name": "DevFlow",
-    "url": "https://github.com/your-github-username/devflow-plugin"
+    "url": "https://github.com/Tushar-Banswal/devflow-plugin"
   },
-  "homepage": "https://github.com/your-github-username/devflow-plugin",
-  "repository": "https://github.com/your-github-username/devflow-plugin",
+  "homepage": "https://github.com/Tushar-Banswal/devflow-plugin",
+  "repository": "https://github.com/Tushar-Banswal/devflow-plugin",
   "license": "MIT"
 }

@@ -25,7 +25,7 @@ When DevFlow is active, every Claude Code session follows this workflow:
 Add the marketplace and install the plugin in two commands from within Claude Code:
 
 ```shell
-/plugin marketplace add your-github-username/devflow-plugin
+/plugin marketplace add Tushar-Banswal/devflow-plugin
 /plugin install devflow@devflow
 ```
 
