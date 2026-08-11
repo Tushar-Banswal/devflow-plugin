@@ -1,38 +1,16 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "devflow",
   "description": "DevFlow — multi-agent Dev/Review workflow plugin for Claude Code",
   "owner": {
     "name": "Tushar Banswal",
-    "url": "https://github.com/Tushar-Banswal/devflow-plugin"
+    "url": "https://github.com/Tushar-Banswal"
   },
   "plugins": [
     {
       "name": "devflow",
-      "displayName": "DevFlow — Dev/Review Workflow",
-      "source": {
-        "source": "github",
-        "repo": "Tushar-Banswal/devflow-plugin"
-      },
       "description": "Auto-activates REVIEWER (Senior Engineer) and DEVELOPER (Mid-level Engineer) agents on every Claude Code session. Runs an automated review loop with configurable max iterations. Includes security, architectural, system-design, clean-code, and senior-architect skills.",
-      "version": "1.0.0",
-      "author": {
-        "name": "Tushar Banswal",
-        "url": "https://github.com/Tushar-Banswal/devflow-plugin"
-      },
-      "homepage": "https://github.com/Tushar-Banswal/devflow-plugin",
-      "repository": "https://github.com/Tushar-Banswal/devflow-plugin",
-      "license": "MIT",
-      "keywords": [
-        "agents",
-        "code-review",
-        "developer",
-        "reviewer",
-        "workflow",
-        "multi-agent",
-        "senior-engineer",
-        "security",
-        "architecture"
-      ],
+      "source": "./",
       "category": "development-workflows"
     }
   ]
