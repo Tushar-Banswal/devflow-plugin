@@ -1,4 +1,5 @@
 ---
+name: developer
 description: >
   Explicitly invoke the DEVELOPER (Mid-level Engineer) agent. Implements code
   changes based on the REVIEWER's current brief or a direct instruction provided
@@ -9,10 +10,12 @@ description: >
 
 Additional instruction or context: $ARGUMENTS
 
-Check session state:
+Determine the correct action using this priority order:
 
-- **REVIEWER brief exists** → Implement per that brief. If $ARGUMENTS provides extra context, treat it as an addendum.
-- **No brief exists** → Remind the user that REVIEWER should run first to produce an implementation brief. Ask: "Shall I run REVIEWER now, or proceed with the instruction directly?" Then respect their answer.
+1. **`$ARGUMENTS` provided AND a REVIEWER brief exists** → Implement per the brief; treat `$ARGUMENTS` as an addendum or override for that specific detail.
+2. **`$ARGUMENTS` provided, NO brief exists** → Remind the user that REVIEWER should run first. Ask: "Shall I run REVIEWER now, or proceed with the instruction directly?" Respect their answer.
+3. **No `$ARGUMENTS`, REVIEWER brief exists** → Implement per the brief.
+4. **No `$ARGUMENTS`, NO brief exists** → Remind the user that REVIEWER should run first to produce an implementation brief. Ask: "Shall I run REVIEWER now?"
 
 Apply the full DEVELOPER process:
 1. Read context (CLAUDE.md + all files in brief)

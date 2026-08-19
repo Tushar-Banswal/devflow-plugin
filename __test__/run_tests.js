@@ -1,70 +1,160 @@
-// run_tests.js – Cross‑platform test harness for DevFlow plugin
-// This script creates a temporary project, installs the plugin via the self‑hosted marketplace,
-// runs a Claude session, and verifies that the core review loop executes.
+﻿// run_tests.js -- DevFlow plugin test harness
+//
+// What these tests cover (no live Claude session required):
+//   1. Hook script -- verifies the activation JSON output structure and required strings
+//   2. Plugin files -- verifies all required files exist and are non-empty
+//   3. Front-matter -- verifies name: is present in every skill YAML header
+//
+// End-to-end session test (manual):
+//   Run `claude --plugin-dir .` from the PARENT directory of devflow-plugin, then send
+//   a task and verify the REVIEWER -> DEVELOPER loop executes and ends with APPROVED.
+//   Expected strings are listed in __test__/expected_output.txt.
 
-const { execSync, execFileSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const { execFileSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
-// Helper to run a command and capture stdout+stderr
-function run(cmd, args = [], opts = {}) {
-  try {
-    const result = execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], ...opts });
-    return result.toString();
-  } catch (e) {
-    console.error(`❌ Command failed: ${cmd} ${args.join(' ')}`);
-    console.error(e.stderr ? e.stderr.toString() : e.message);
-    process.exit(1);
-  }
+const ROOT = path.resolve(__dirname, "..");
+let passed = 0;
+let failed = 0;
+
+function pass(label) {
+  console.log("  OK  " + label);
+  passed++;
 }
 
-(async () => {
-  // 1️⃣ Create temporary test directory
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'devflow-test-'));
-  console.log(`🗂️  Using temporary folder: ${tmpDir}`);
+function fail(label, detail) {
+  console.error("  FAIL  " + label);
+  if (detail) console.error("        " + detail);
+  failed++;
+}
 
-  // 2️⃣ Initialise minimal repo
-  process.chdir(tmpDir);
-  run('git', ['init', '-q']);
-  fs.writeFileSync('add.js', `export function add(a, b) {\n  return a + b;\n}\n`);
-  fs.writeFileSync('CLAUDE.md', `devflow:\n  max_iterations: 2\n  reviewer_model: default\n  developer_model: default\n`);
+function section(title) {
+  console.log("\n-- " + title);
+}
 
-  // 3️⃣ Install the plugin via self‑hosted marketplace
-  console.log('🔌 Adding marketplace and installing plugin...');
-  run('claude', ['/plugin', 'marketplace', 'add', 'Tushar-Banswal/devflow-plugin']);
-  run('claude', ['/plugin', 'install', 'devflow@devflow']);
-  run('claude', ['/reload-plugins']);
+// ---------------------------------------------------------------------------
+// 1. Hook script output
+// ---------------------------------------------------------------------------
+section("Hook script -- activation JSON");
 
-  // 4️⃣ Run a non‑interactive Claude session
-  // The `--no-interactive` flag forces default answers to model‑preference prompts.
-  const outputFile = path.join(tmpDir, 'session_output.txt');
-  console.log('🚀 Running Claude session...');
-  run('claude', [
-    '--no-interactive',
-    '--plugin-dir', '.',
-    '--prompt', 'Create a function that multiplies two numbers',
-    '--output-file', outputFile
-  ]);
+(function () {
+  const hookPath = path.join(ROOT, "hooks", "devflow-activate.js");
 
-  // 5️⃣ Verify required strings are present
-  const output = fs.readFileSync(outputFile, 'utf8');
-  const required = [
-    'DevFlow active',
-    'Which model should I use',
-    'Implementation Brief',
-    'APPROVED'
-  ];
-  const missing = required.filter(str => !output.includes(str));
-
-  if (missing.length === 0) {
-    console.log('✅ All verification strings found – test passed');
-  } else {
-    console.error('❌ Missing expected output:', missing.join(', '));
-    process.exit(1);
+  let output;
+  try {
+    output = execFileSync(process.execPath, [hookPath], {
+      input: "{}",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).toString();
+  } catch (e) {
+    fail("Hook script exits 0", e.message);
+    return;
   }
 
-  // 6️⃣ Cleanup (optional – keep for debugging)
-  // Uncomment the line below to delete the temporary folder after the run.
-  // fs.rmSync(tmpDir, { recursive: true, force: true });
+  pass("Hook script exits 0");
+
+  let parsed;
+  try {
+    parsed = JSON.parse(output);
+    pass("Output is valid JSON");
+  } catch (_) {
+    fail("Output is valid JSON", "Raw output: " + output.slice(0, 120));
+    return;
+  }
+
+  var ctx =
+    (parsed &&
+      parsed.hookSpecificOutput &&
+      parsed.hookSpecificOutput.additionalContext) ||
+    "";
+
+  var requiredStrings = [
+    "DEVFLOW PLUGIN ACTIVATED",
+    "Which model should I use",
+    "Implementation Brief",
+    "REVIEWER",
+    "DEVELOPER",
+    "Phase 1",
+    "Phase 2",
+    "Phase 3",
+    "Phase 4",
+  ];
+
+  requiredStrings.forEach(function (str) {
+    if (ctx.indexOf(str) !== -1) {
+      pass('Activation prompt contains "' + str + '"');
+    } else {
+      fail('Activation prompt contains "' + str + '"');
+    }
+  });
 })();
+
+// ---------------------------------------------------------------------------
+// 2. Required plugin files exist and are non-empty
+// ---------------------------------------------------------------------------
+section("Plugin file presence");
+
+var requiredFiles = [
+  ".claude-plugin/plugin.json",
+  ".claude-plugin/marketplace.json",
+  "hooks/hooks.json",
+  "hooks/devflow-activate.js",
+  "agents/developer.md",
+  "agents/reviewer.md",
+  "skills/clean-code/SKILL.md",
+  "skills/security/SKILL.md",
+  "skills/architectural/SKILL.md",
+  "skills/system-design/SKILL.md",
+  "skills/senior-architect/SKILL.md",
+  "skills/developer/SKILL.md",
+  "skills/reviewer/SKILL.md",
+  "README.md",
+  "package.json",
+];
+
+requiredFiles.forEach(function (rel) {
+  var abs = path.join(ROOT, rel);
+  if (fs.existsSync(abs) && fs.statSync(abs).size > 0) {
+    pass(rel);
+  } else {
+    fail(rel, "Missing or empty");
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 3. YAML front-matter -- name: field required in all skill files
+// ---------------------------------------------------------------------------
+section("SKILL.md front-matter -- name: field");
+
+var skillFiles = [
+  "skills/clean-code/SKILL.md",
+  "skills/security/SKILL.md",
+  "skills/architectural/SKILL.md",
+  "skills/system-design/SKILL.md",
+  "skills/senior-architect/SKILL.md",
+  "skills/developer/SKILL.md",
+  "skills/reviewer/SKILL.md",
+];
+
+skillFiles.forEach(function (rel) {
+  var abs = path.join(ROOT, rel);
+  var content = fs.readFileSync(abs, "utf8");
+  // Extract YAML front-matter between first pair of ---
+  var fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (fmMatch && /^name:\s*\S/m.test(fmMatch[1])) {
+    pass(rel + " has name:");
+  } else {
+    fail(rel + " has name:", "Missing name: field in YAML front-matter");
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Results
+// ---------------------------------------------------------------------------
+console.log("\n----------------------------------------");
+console.log("Total: " + (passed + failed) + "  OK: " + passed + "  FAIL: " + failed);
+
+if (failed > 0) {
+  process.exit(1);
+}

@@ -29,6 +29,13 @@ When DevFlow is active, every session follows this workflow:
 
 ---
 
+## Prerequisites
+
+- **Node.js ≥ 18** — required for the activation hook (`hooks/devflow-activate.js`)
+- **Claude Code** — the plugin runs inside Claude Code sessions
+
+---
+
 ## Installation
 
 ### Claude Code (current)
@@ -48,6 +55,8 @@ If prompted, run:
 
 #### Dev / Test (one session, no install)
 
+Run this from the **parent directory** of `devflow-plugin/`:
+
 ```shell
 claude --plugin-dir ./devflow-plugin
 ```
@@ -64,7 +73,7 @@ Support for additional coding agents is planned. Watch this repo for updates.
 
 DevFlow activates automatically on every session start. The orchestrator will:
 - Announce that DevFlow is active
-- Ask which model to use for each agent
+- Ask which model to use for each agent (skipped automatically if both are pre-set in config)
 - Wait for your task, then run the full REVIEWER → DEVELOPER → REVIEWER loop
 
 ### Manual invocation
@@ -80,7 +89,7 @@ DevFlow activates automatically on every session start. The orchestrator will:
 
 ## Configuration
 
-Add a `devflow:` block to your project's rules file (`CLAUDE.md`, `AGENTS.md`, or equivalent) to customise behaviour:
+Add a `devflow:` block inside your project's `CLAUDE.md` or `AGENTS.md` file to customise behaviour:
 
 ```yaml
 devflow:
@@ -88,6 +97,8 @@ devflow:
   reviewer_model: default   # Model for REVIEWER ('default' = session model)
   developer_model: default  # Model for DEVELOPER
 ```
+
+When both `reviewer_model` and `developer_model` are explicitly set (not `default`), the model-preference prompt is skipped automatically on session start.
 
 ---
 

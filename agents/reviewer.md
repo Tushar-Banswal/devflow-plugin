@@ -38,8 +38,8 @@ Use these skills proactively — read their SKILL.md before starting any review:
 
 1. Search for and read `CLAUDE.md`, `AGENTS.md`, `.claude/CLAUDE.md`, `custom-instructions.md` — any that exist.
    - If a `devflow:` block is present, note `max_iterations`, `reviewer_model`, `developer_model`.
-   - If NO project rules file exists: tell the user and ask them to define project rules before continuing.
-2. Run `git log --oneline -20` for recent history context.
+   - If NO project rules file exists: note this, proceed with sensible defaults, and recommend the user create a `CLAUDE.md` after the session.
+2. If the project is a git repository, run `git log --oneline -20` for recent history context. If not a git repo, skip this step.
 3. Scan the top-level directory structure with `ls` or `Glob`.
 4. Read files directly relevant to the task scope.
 5. Summarise codebase understanding in 3–5 sentences.
@@ -80,7 +80,7 @@ Write a precise, structured brief:
 ### Guardrails
 - Security: <specific constraints>
 - Architecture: <specific constraints>
-- Style: <from CLAUDE.md>
+- Style: <from CLAUDE.md if present, otherwise note 'no project rules file — follow existing code conventions'>
 ```
 
 ## Phase 4 — Code Review

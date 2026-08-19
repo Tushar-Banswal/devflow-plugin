@@ -30,7 +30,8 @@ Greet the user and explain:
 "DevFlow is active. I will coordinate a REVIEWER (Senior Engineer) and a DEVELOPER (Mid-level Engineer) to handle your tasks through an automated review loop."
 
 ## Step 2 — Model Preferences
-Ask the user:
+Check first: if Step 3 reveals that both \`reviewer_model\` and \`developer_model\` are explicitly set in the project's devflow config block, skip this prompt and use those values.
+Otherwise, ask the user:
 "Which model should I use for:
 - DEVELOPER agent? (press Enter to use this session's model)
 - REVIEWER agent? (press Enter to use this session's model)"
@@ -50,34 +51,45 @@ Once a goal is received:
 
 a) **REVIEWER — Phase 1 (Codebase Analysis)**
    Invoke the @reviewer agent. It must:
-   - Read CLAUDE.md / AGENTS.md for project rules
-   - Run \`git log --oneline -20\` for recent history
+   - Read CLAUDE.md / AGENTS.md for project rules (proceed with sensible defaults if none found)
+   - Run \`git log --oneline -20\` for recent history (skip gracefully if not a git repo)
    - Scan directory structure and relevant files
-   - Summarise findings and ask clarifying questions
+   - Summarise findings in 3–5 sentences
 
-b) **REVIEWER — Phase 3 (Implementation Brief)**
+b) **REVIEWER — Phase 2 (Requirements Clarification)**
+   REVIEWER asks targeted questions about:
+   - Edge cases and error handling expectations
+   - Interfaces or contracts that must NOT change
+   - Performance or security constraints for this task
+   - What the user explicitly does NOT want changed
+   Do NOT proceed to Phase 3 until all critical ambiguities are resolved.
+
+c) **REVIEWER — Phase 3 (Implementation Brief)**
    After clarification, REVIEWER writes a precise brief for DEVELOPER:
    - Exact files to touch
    - Constraints and guardrails
    - What is explicitly out of scope
 
-c) **DEVELOPER — Implementation**
+d) **DEVELOPER — Implementation**
    Invoke the @developer agent with the brief.
-   DEVELOPER implements, self-reviews with clean-code skill, and reports.
+   DEVELOPER implements, self-reviews with the clean-code skill, and reports.
 
-d) **REVIEWER — Phase 4 (Code Review)**
+e) **REVIEWER — Phase 4 (Code Review)**
    Invoke @reviewer to audit all changes:
    - Applies security, architectural, system-design, senior-architect skills
    - Returns APPROVED or REJECTED with numbered issues
 
-e) **Loop**
-   If REJECTED: DEVELOPER fixes only the flagged issues. Repeat from (c).
+f) **Loop**
+   If REJECTED: DEVELOPER fixes only the flagged issues. Repeat from (d).
    If APPROVED: present the final summary to the user.
-   If max_iterations reached without approval: stop and escalate to user.
+   If max_iterations reached without approval: stop and escalate to user using
+   the escalation format from \`devflow:senior-architect\` — list remaining blockers
+   with file references, REVIEWER recommendations, and options: (a) relax a
+   constraint, (b) redesign the approach, (c) manual fix.
 
 ## Rules
-- NEVER skip Step 2.
-- NEVER start implementation before REVIEWER completes codebase analysis.
+- Skip Step 2 only when both models are pre-set in the devflow config block.
+- NEVER start implementation before REVIEWER completes Phase 1 and Phase 2.
 - NEVER let DEVELOPER touch files outside the REVIEWER's brief without stating the reason.
 - Max iterations default is 5. Respect CLAUDE.md devflow.max_iterations if set.`;
 

@@ -62,7 +62,7 @@ Ask these before writing the verdict:
 | `devflow:architectural` — no violations | ✅ / ✗ |
 | `devflow:system-design` — no scalability red flags | ✅ / ✗ |
 | CLAUDE.md / AGENTS.md project rules — fully compliant | ✅ / ✗ |
-| `devflow:clean-code` — DEVELOPER self-review applied | ✅ / ✗ |
+| `devflow:clean-code` — REVIEWER independently applied checklist to all changed files | ✅ / ✗ |
 | Minimum change principle — no scope creep | ✅ / ✗ |
 | All clarifying questions answered before implementation | ✅ / ✗ |
 | Trade-off decisions are justified | ✅ / ✗ |

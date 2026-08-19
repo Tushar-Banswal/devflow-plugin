@@ -1,0 +1,17 @@
+﻿{
+  "name": "devflow-plugin",
+  "version": "1.0.0",
+  "description": "Multi-agent REVIEWER -> DEVELOPER workflow plugin for Claude Code",
+  "author": "Tushar Banswal",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node __test__/run_tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tushar-Banswal/devflow-plugin"
+  }
+}
