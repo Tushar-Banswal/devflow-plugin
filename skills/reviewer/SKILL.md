@@ -8,9 +8,11 @@ disable-model-invocation: true
 
 User scope or instruction: $ARGUMENTS
 
-Read `${CLAUDE_SKILL_DIR}/../../lib/workflow.md` and follow its protocol as the
-ORCHESTRATOR. Replace `__DEVFLOW_STATE_COMMAND__` with
-`node "${CLAUDE_SKILL_DIR}/../../hooks/devflow-state.js"` when running helper commands.
+The shared protocol is `${CLAUDE_SKILL_DIR}/../../lib/workflow.md`.
+Render it with its Claude adapter using
+`node "${CLAUDE_SKILL_DIR}/../../bin/devflow.js" context --host claude-code`
+with JSON {} on stdin, from the target project. Follow the returned protocol as
+the ORCHESTRATOR. It resolves the installed state helper's absolute path.
 
 Use the Agent tool with `subagent_type: devflow:reviewer`. Do not perform the
 reviewer's work in the main conversation. Pass the full goal, brief, current phase,

@@ -32,3 +32,8 @@ Verify actual Agent tool calls and helper JSON state, not only response phrases.
 
 Automated behavioral tests: npm test. No PowerShell harness or session_output.txt
 is generated. Live integration results must be recorded by the person running it.
+
+Cross-host release checks, including automatic activation after one user-level
+installation in two unrelated repositories, are in docs/verification.md.
+Generated Codex, Copilot, and Antigravity packages remain unverified candidates
+until those native-session and delegation checks pass.
