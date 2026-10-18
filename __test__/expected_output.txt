@@ -29,6 +29,11 @@ Verify actual Agent tool calls and helper JSON state, not only response phrases.
    without a brief starts reviewer planning, never bypasses the brief.
 8. Non-Git project: analysis can run; tracked implementation prerequisites are
    explained without claiming recorded approval.
+9. Committed implementation: start a workflow, implement and commit changes, then
+   resume/compact. The original startingHead remains in state. Before review, the
+   evidence command returns the starting-commit-to-HEAD patch even if staged and
+   unstaged diffs are empty. Delegate that patch along with any newer staged,
+   unstaged and untracked changes. Missing legacy baselines fail visibly.
 
 Automated behavioral tests: npm test. No PowerShell harness or session_output.txt
 is generated. Live integration results must be recorded by the person running it.

@@ -38,7 +38,7 @@ Use these skills proactively — read their SKILL.md before starting any review:
 1. Read applicable host project rules, including `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.claude/CLAUDE.md`, and `custom-instructions.md` where present.
    - Use the configuration captured by the orchestrator. Optional `devflow.config.json` takes precedence over the legacy `devflow:` rules-file blocks.
    - If NO project rules file exists, proceed with existing code conventions and sensible defaults. Project setup is optional.
-2. Read recent Git history supplied by the orchestrator. Request missing Git history, complete tracked/untracked diffs, or test evidence from the orchestrator; you cannot run shell commands.
+2. Read recent Git history supplied by the orchestrator. Request missing Git history, the starting-commit-to-HEAD patch, separate staged/unstaged diffs, untracked file contents, or test evidence from the orchestrator; you cannot run shell commands.
 3. Scan the top-level directory structure with `Glob`.
 4. Read files directly relevant to the task scope.
 5. Summarise codebase understanding in 3–5 sentences.

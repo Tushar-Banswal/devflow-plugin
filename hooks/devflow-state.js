@@ -21,7 +21,11 @@ function location(cwd) {
 function fingerprint(root) {
   const hash = crypto.createHash("sha256");
   hash.update(git(["rev-parse", "HEAD"], root));
-  hash.update(git(["diff", "HEAD", "--binary", "--no-ext-diff", "--no-textconv", "--"], root));
+  for (const args of [["diff", "--cached", "HEAD"], ["diff"]]) {
+    const diff = git([...args, "--binary", "--no-ext-diff", "--no-textconv", "--"], root);
+    hash.update(`${diff.length}:`);
+    hash.update(diff);
+  }
   const names = git(["ls-files", "--others", "--exclude-standard", "-z"], root).toString().split("\0").filter(Boolean).sort();
   for (const name of names) {
     const file = path.join(root, name);
@@ -47,8 +51,8 @@ function transition(state, command, input, root) {
   if (command === "init") {
     if (state && !["approved", "escalated", "cancelled"].includes(state.phase)) throw new Error("A workflow is already active; resume it instead of resetting its counter");
     requireText(input.goal, "goal");
-    git(["rev-parse", "--verify", "HEAD"], root);
-    return { version: 1, goal: input.goal, config: resolveConfig(readConfig(root), input), phase: "planning", iteration: 0 };
+    const startingHead = git(["rev-parse", "--verify", "HEAD"], root).toString().trim();
+    return { version: 1, startingHead, goal: input.goal, config: resolveConfig(readConfig(root), input), phase: "planning", iteration: 0 };
   }
   if (command === "cancel") {
     requirePhase(state, ["planning", "ready", "implementing", "reviewing", "rejected"]);
@@ -86,6 +90,24 @@ function transition(state, command, input, root) {
   throw new Error(`Unknown command: ${command}`);
 }
 
+/** Reconstruct review evidence from the original commit, including committed work. */
+function evidence(state, root) {
+  if (!state || typeof state.startingHead !== "string" || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(state.startingHead)) {
+    throw new Error("Workflow has no starting commit; its review scope cannot be reconstructed. Do not substitute current HEAD; ask the user how to recover or restart the workflow.");
+  }
+  git(["rev-parse", "--verify", `${state.startingHead}^{commit}`], root);
+  const head = git(["rev-parse", "--verify", "HEAD"], root).toString().trim();
+  const diff = (args) => git(["diff", ...args, "--binary", "--no-ext-diff", "--no-textconv", "--"], root).toString();
+  return {
+    startingHead: state.startingHead,
+    head,
+    committedDiff: diff([state.startingHead, head]),
+    stagedDiff: diff(["--cached", head]),
+    unstagedDiff: diff([]),
+    untrackedFiles: git(["ls-files", "--others", "--exclude-standard", "-z"], root).toString().split("\0").filter(Boolean).sort(),
+  };
+}
+
 /** Read workflow state, reporting stale approval without changing its audit record. */
 function status(cwd) {
   const { root, file } = location(cwd);
@@ -100,6 +122,10 @@ function execute(command, input, cwd) {
   if (command === "status") return status(cwd);
   if (command === "config") return readConfig(location(cwd).root);
   const { root, file } = location(cwd);
+  if (command === "evidence") {
+    const state = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : null;
+    return evidence(state, root);
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const lock = `${file}.lock`;
   const handle = fs.openSync(lock, "wx");

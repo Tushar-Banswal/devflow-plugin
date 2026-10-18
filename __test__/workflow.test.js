@@ -192,3 +192,81 @@ test("an initial commit is required before recording a workflow", (t) => {
   assert.throws(() => run(root, "init", { goal: "test" }));
   assert.equal(run(root, "status"), null);
 });
+
+
+test("committed implementation evidence survives process and session recovery", (t) => {
+  const root = fixture(t);
+  const startingHead = git(root, "rev-parse", "HEAD");
+  assert.equal(ready(root).startingHead, startingHead);
+  run(root, "implement");
+  fs.appendFileSync(path.join(root, "app.js"), "committed implementation\n");
+  git(root, "add", "app.js");
+  git(root, "-c", "user.name=DevFlow Test", "-c", "user.email=test@example.com", "commit", "--no-gpg-sign", "-qm", "implement");
+  const head = git(root, "rev-parse", "HEAD");
+  assert.notEqual(head, startingHead);
+  assert.equal(git(root, "diff", "--cached", "HEAD"), "");
+  assert.equal(git(root, "diff"), "");
+
+  const before = run(root, "status");
+  const output = execFileSync(process.execPath, [path.join(ROOT, "hooks/devflow-state.js"), "evidence"], { cwd: root, input: "{}" });
+  const evidence = JSON.parse(output);
+  assert.equal(evidence.startingHead, startingHead);
+  assert.equal(evidence.head, head);
+  assert.match(evidence.committedDiff, /\+committed implementation/);
+  assert.equal(evidence.stagedDiff, "");
+  assert.equal(evidence.unstagedDiff, "");
+  assert.deepEqual(evidence.untrackedFiles, []);
+  assert.deepEqual(run(root, "status"), before);
+  for (const source of ["resume", "compact"]) {
+    const context = JSON.parse(execFileSync(process.execPath, [path.join(ROOT, "hooks/devflow-activate.js")], { cwd: root, input: JSON.stringify({ source, cwd: root }) })).hookSpecificOutput.additionalContext;
+    assert.ok(context.includes(`"startingHead":"${startingHead}"`));
+  }
+  run(root, "review");
+  run(root, "verdict", rejected);
+  run(root, "implement");
+  fs.appendFileSync(path.join(root, "app.js"), "committed fix\n");
+  git(root, "add", "app.js");
+  git(root, "-c", "user.name=DevFlow Test", "-c", "user.email=test@example.com", "commit", "--no-gpg-sign", "-qm", "fix");
+  const next = run(root, "evidence");
+  assert.equal(next.startingHead, startingHead);
+  assert.match(next.committedDiff, /\+committed implementation/);
+  assert.match(next.committedDiff, /\+committed fix/);
+  run(root, "review");
+  run(root, "refresh-review");
+  assert.equal(run(root, "status").startingHead, startingHead);
+});
+
+test("evidence separates committed, staged, unstaged and untracked changes", (t) => {
+  const root = fixture(t);
+  ready(root);
+  run(root, "implement");
+  fs.appendFileSync(path.join(root, "app.js"), "committed implementation\n");
+  git(root, "add", "app.js");
+  git(root, "-c", "user.name=DevFlow Test", "-c", "user.email=test@example.com", "commit", "--no-gpg-sign", "-qm", "implement");
+  fs.appendFileSync(path.join(root, "app.js"), "staged change\n");
+  git(root, "add", "app.js");
+  fs.appendFileSync(path.join(root, "app.js"), "unstaged change\n");
+  fs.writeFileSync(path.join(root, "new file.js"), "untracked change\n");
+  const evidence = run(root, "evidence");
+  assert.match(evidence.committedDiff, /\+committed implementation/);
+  assert.doesNotMatch(evidence.committedDiff, /staged change/);
+  assert.match(evidence.stagedDiff, /\+staged change/);
+  assert.doesNotMatch(evidence.stagedDiff, /\+unstaged change/);
+  assert.match(evidence.unstagedDiff, /\+unstaged change/);
+  assert.deepEqual(evidence.untrackedFiles, ["new file.js"]);
+});
+
+test("evidence refuses missing or unavailable baselines without changing state", (t) => {
+  const root = fixture(t);
+  assert.throws(() => run(root, "evidence"), /no starting commit/);
+  ready(root);
+  const file = path.resolve(root, git(root, "rev-parse", "--git-path", "devflow/state.json"));
+  const original = run(root, "status");
+  for (const startingHead of [undefined, "0".repeat(40)]) {
+    const state = { ...original, startingHead };
+    fs.writeFileSync(file, JSON.stringify(state));
+    const before = fs.readFileSync(file, "utf8");
+    assert.throws(() => run(root, "evidence"));
+    assert.equal(fs.readFileSync(file, "utf8"), before);
+  }
+});

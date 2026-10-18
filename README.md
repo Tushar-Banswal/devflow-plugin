@@ -119,6 +119,8 @@ preferences. Only default entries ask for preferences when starting a task.
 State lives at Git's per-worktree `devflow/state.json` metadata path, outside
 commits. One worktree has one active workflow shared across sessions and hosts.
 Do not run concurrent orchestrators against it. Linked worktrees are independent.
+State retains the goal, `startingHead`, brief, models, phase, iteration, and latest
+review issues across sessions and hosts.
 
 Run the packaged `hooks/devflow-state.js` from the target project. Each command
 takes a JSON object on stdin (`{}` for commands without fields) and returns JSON.
@@ -128,6 +130,7 @@ takes a JSON object on stdin (`{}` for commands without fields) and returns JSON
 | --- | --- | --- |
 | `config` | `{}` | Read validated project configuration |
 | `status` | `{}` | Read state, null, or stale approval |
+| `evidence` | `{}` | Starting/current commits, committed/staged/unstaged patches, and untracked file names |
 | `init` | `goal`, optional model preferences | Begin planning; preserve active workflows |
 | `brief` | `brief` | Record the implementation brief |
 | `implement` | `{}` | Count and begin one implementation pass |
@@ -135,6 +138,15 @@ takes a JSON object on stdin (`{}` for commands without fields) and returns JSON
 | `refresh-review` | `{}` | Capture changes and require a complete new review |
 | `verdict` | `result`, `summary`, `issues` | Approve, reject, or escalate at the limit |
 | `cancel` | `reason` | Cancel only at the user's request |
+
+The starting commit is captured once by `init` and preserved across implementation
+commits, rejection loops and session recovery. Before every review, `evidence`
+returns `committedDiff` from that commit to current HEAD, separate `stagedDiff`
+and `unstagedDiff` patches, and `untrackedFiles` names. The orchestrator supplies
+all patches and reads the listed untracked files for the reviewer. Committing work
+does not remove it from review scope. Evidence collection does not modify state.
+If a legacy workflow lacks a starting commit, or that commit is unavailable, stop
+and recover or explicitly restart with the user; never guess the baseline.
 
 Verdicts use `APPROVED` with no issues, or `REJECTED` with issue strings in
 `file:line — required fix` format. Files changed during review invalidate verdict
