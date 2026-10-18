@@ -9,7 +9,6 @@ description: >
   devflow:clean-code before reporting.
 model: inherit
 tools: [Read, Grep, Glob, Edit, MultiEdit, Write, Bash, WebSearch]
-permissionMode: auto
 skills:
   - devflow:clean-code
 color: cyan

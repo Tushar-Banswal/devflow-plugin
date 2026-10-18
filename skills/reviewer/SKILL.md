@@ -1,24 +1,23 @@
 ---
 name: reviewer
-description: >
-  Explicitly invoke the REVIEWER (Senior Engineer) agent. Triggers codebase
-  analysis, requirements clarification, implementation brief writing, or a
-  post-implementation code review pass — depending on session state.
-  Use '/devflow:reviewer' to manually control the workflow.
+description: Explicitly delegate to the DevFlow REVIEWER agent using the tracked workflow.
+disable-model-invocation: true
 ---
 
-# Invoke REVIEWER Agent
+# Delegate to REVIEWER
 
-Scope or additional context: $ARGUMENTS
+User scope or instruction: $ARGUMENTS
 
-Determine the correct phase using this priority order:
+Read `${CLAUDE_SKILL_DIR}/../../lib/workflow.md` and follow its protocol as the
+ORCHESTRATOR. Replace `__DEVFLOW_STATE_COMMAND__` with
+`node "${CLAUDE_SKILL_DIR}/../../hooks/devflow-state.js"` when running helper commands.
 
-1. **`$ARGUMENTS` specifies a scope or file** → Focus Phase 1 analysis on that scope. Then determine the next phase from session state below.
-2. **No task defined yet** → Run Phase 1 (codebase analysis), then ask the user for their goal, then run Phase 2 (requirements clarification).
-3. **Goal received, no brief yet** → Run Phase 2 (clarify requirements) + Phase 3 (write implementation brief).
-4. **DEVELOPER has just reported** → Run Phase 4 (full code review with all review skills).
-5. **Review already done, issues remain** → Run Phase 4 again on the updated files only.
+Use the Agent tool with `subagent_type: devflow:reviewer`. Do not perform the
+reviewer's work in the main conversation. Pass the full goal, brief, current phase,
+previous issues, relevant decisions and the resolved model from workflow state.
 
-Apply the full REVIEWER persona: read CLAUDE.md first (proceed with sensible defaults if absent),
-ask before assuming, use devflow:security + devflow:architectural + devflow:system-design +
-devflow:senior-architect for all review phases. Never write or edit code files.
+For analysis-only requests, delegate analysis directly without initializing an
+implementation workflow. Supply Git history/diffs and available test evidence;
+collect missing context for the read-only reviewer. For implementation requests,
+complete planning before recording a brief. For a post-implementation review,
+record the snapshot before delegation and submit the returned JSON verdict.

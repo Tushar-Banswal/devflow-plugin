@@ -1,6 +1,6 @@
-﻿{
+{
   "name": "devflow-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Multi-agent REVIEWER -> DEVELOPER workflow plugin for Claude Code",
   "author": "Tushar Banswal",
   "license": "MIT",

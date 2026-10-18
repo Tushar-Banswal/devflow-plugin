@@ -1,12 +1,39 @@
-# Expected output fragments for the DevFlow test harness
+Manual Claude Code integration checks (requires Claude Code and model access)
 
-The `run_tests.ps1` script checks that the following strings appear in the Claude session output (`session_output.txt`). If all are present, the test is considered passed.
+From the plugin checkout:
+  claude --plugin-dir .
+From its parent:
+  claude --plugin-dir ./devflow-plugin
 
-```
-DevFlow active
-Which model should I use
-Implementation Brief
-APPROVED
-```
+Use a disposable Git project with an initial commit for implementation scenarios.
+Verify actual Agent tool calls and helper JSON state, not only response phrases.
 
-You can open `session_output.txt` after running the script to see the full Claude response. The file will contain the orchestrator greeting, the model‑preference question, the reviewer’s brief, the developer’s implementation summary, and the final reviewer verdict.
+1. Fresh task: supply a goal in the first message. Config is read before model
+   preferences; the same goal is not requested again. Agent calls use scoped
+   devflow:reviewer and devflow:developer types. REVIEWER receives complete Git
+   evidence and cannot access Bash, Edit, Write or Agent.
+2. Partial config: preset only reviewer_model. Only developer preference is
+   requested; the preset reviewer model is passed explicitly in delegation.
+   An unsupported model/tool override is surfaced before work proceeds.
+3. Review loop: confirm the helper records brief -> implementing -> reviewing.
+   Introduce a real defect and verify a REJECTED JSON verdict with file:line
+   issues. The next developer pass receives those issues and increments once.
+4. Exhaustion: set max_iterations: 1 before starting. A rejected first pass
+   records escalated; no second implementation starts. Blockers are shown.
+5. Recovery: resume and compact while implementing and reviewing. The existing
+   goal, brief, iteration and issues are recovered without onboarding/reset.
+6. Snapshot validity: change a file while review is pending. Verdict submission
+   fails; refresh-review requires a complete new review. Modify a file after
+   approval and verify status reports stale, not approved.
+7. Manual commands: /devflow:reviewer delegates analysis. /devflow:developer
+   without a brief starts reviewer planning, never bypasses the brief.
+8. Non-Git project: analysis can run; tracked implementation prerequisites are
+   explained without claiming recorded approval.
+9. Committed implementation: start a workflow, implement and commit changes, then
+   resume/compact. The original startingHead remains in state. Before review, the
+   evidence command returns the starting-commit-to-HEAD patch even if staged and
+   unstaged diffs are empty. Delegate that patch along with any newer staged,
+   unstaged and untracked changes. Missing legacy baselines fail visibly.
+
+Automated behavioral tests: npm test. No PowerShell harness or session_output.txt
+is generated. Live integration results must be recorded by the person running it.
