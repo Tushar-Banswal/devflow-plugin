@@ -3,7 +3,7 @@ Manual Claude Code integration checks (requires Claude Code and model access)
 From the plugin checkout:
   claude --plugin-dir .
 From its parent:
-  claude --plugin-dir ./devflow-plugin
+  claude --plugin-dir ./patchDuo
 
 Use a disposable Git project with an initial commit for implementation scenarios.
 Verify actual Agent tool calls and helper JSON state, not only response phrases.

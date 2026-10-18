@@ -31,7 +31,7 @@ checkout. Keep the distribution available if a local marketplace loads it in pla
 Existing marketplace installation is preserved:
 
 ```text
-/plugin marketplace add Tushar-Banswal/devflow-plugin
+/plugin marketplace add Tushar-Banswal/patchDuo
 /plugin install patchduo@patchduo
 ```
 
@@ -134,7 +134,8 @@ outside the advertised targets until separate-agent delegation is verified.
 
 ## Upgrade from DevFlow
 
-The project is now PatchDuo; the repository URL remains unchanged. Install the new
+The project and repository are now PatchDuo. Use `Tushar-Banswal/patchDuo` for
+GitHub links and marketplace registration. Install the new
 `patchduo` plugin and disable/uninstall the old `devflow` plugin so only one
 orchestrator runs. Agent names and manual commands now use `patchduo`.
 

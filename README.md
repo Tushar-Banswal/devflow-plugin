@@ -7,7 +7,7 @@
 A developer agent writes the code. A reviewer agent checks it.
 A tracked review loop brings them together inside the coding tools you already use.
 
-[![Tests and packaging](https://github.com/Tushar-Banswal/devflow-plugin/actions/workflows/test.yml/badge.svg)](https://github.com/Tushar-Banswal/devflow-plugin/actions/workflows/test.yml)
+[![Tests and packaging](https://github.com/Tushar-Banswal/patchDuo/actions/workflows/test.yml/badge.svg)](https://github.com/Tushar-Banswal/patchDuo/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js: 18+](https://img.shields.io/badge/Node.js-18%2B-339933.svg)](package.json)
 
@@ -34,7 +34,7 @@ and agent tools available.
 Inside Claude Code:
 
 ```text
-/plugin marketplace add Tushar-Banswal/devflow-plugin
+/plugin marketplace add Tushar-Banswal/patchDuo
 /plugin install patchduo@patchduo
 ```
 
@@ -148,8 +148,9 @@ Both `patchduo:` and legacy `devflow:` blocks remain supported. See the
 ## Upgrading from DevFlow
 
 PatchDuo is the new name for DevFlow. Install with `patchduo@patchduo` and use
-`/patchduo:reviewer` and `/patchduo:developer`. The GitHub repository URL stays
-`Tushar-Banswal/devflow-plugin`, so existing links continue to work.
+`/patchduo:reviewer` and `/patchduo:developer`. The GitHub repository is now
+[`Tushar-Banswal/patchDuo`](https://github.com/Tushar-Banswal/patchDuo). Update saved
+clone URLs and marketplace sources to this location.
 
 Existing `devflow.config.json` files and `devflow:` blocks still work.
 `patchduo.config.json` takes precedence over the old JSON filename; within each
@@ -164,7 +165,8 @@ the new PatchDuo profiles. The new setup preserves separately owned DevFlow file
 ## Recovery and review evidence
 
 State stays at Git's per-worktree `devflow/state.json` metadata path for
-compatibility with existing workflows, outside commits. Each worktree has one active workflow; linked worktrees are independent.
+compatibility with existing workflows, outside commits. Each worktree has one
+active workflow; linked worktrees are independent.
 Sessions and hosts using the same worktree share its state.
 
 PatchDuo records the starting commit once. Before review, the `evidence` command
@@ -206,15 +208,15 @@ review workflow.
 Useful contributions include reproducible bugs, focused regression tests,
 checklist improvements, and recorded live host verification.
 
-- [Report a bug](https://github.com/Tushar-Banswal/devflow-plugin/issues/new) with your host version, OS, reproduction steps, and relevant output.
+- [Report a bug](https://github.com/Tushar-Banswal/patchDuo/issues/new) with your host version, OS, reproduction steps, and relevant output.
 - Test an experimental adapter using the [live acceptance procedure](docs/verification.md) and share the actual agent/tool traces.
 - Propose a change in an issue before building a large feature.
 
 To run the automated checks and build the host packages:
 
 ```sh
-git clone https://github.com/Tushar-Banswal/devflow-plugin.git
-cd devflow-plugin
+git clone https://github.com/Tushar-Banswal/patchDuo.git
+cd patchDuo
 npm test
 npm run build
 ```
