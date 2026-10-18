@@ -145,7 +145,8 @@ workflow does not reset that workflow's iteration limit or selected models.
 State lives at Git's per-worktree `devflow/state.json` path under its Git metadata,
 so it stays out of commits and linked worktrees have independent state. Run one
 workflow per worktree; sessions in the same worktree share the active goal.
-State contains the goal, brief, models, iteration and latest review issues. The
+State contains the goal, starting commit (`startingHead`), brief, models, iteration
+and latest review issues. The
 orchestrator passes that context to every new agent, which has no conversation
 history by default.
 
@@ -161,6 +162,7 @@ node hooks/devflow-state.js status < /dev/null
 |---------|-------|--------|
 | `config` | `{}` | Validated project configuration |
 | `status` | `{}` | Recorded state, `null`, or stale approval |
+| `evidence` | `{}` | Starting/current commits, committed/staged/unstaged patches, and untracked file names |
 | `init` | `goal`, optional model preferences | Starts planning; refuses to reset an active workflow |
 | `brief` | `brief` | Records the implementation brief |
 | `implement` | `{}` | Starts and counts one implementation pass |
@@ -168,6 +170,15 @@ node hooks/devflow-state.js status < /dev/null
 | `refresh-review` | `{}` | Captures changed files; requires a fresh complete review |
 | `verdict` | `result`, `summary`, `issues` | Approves, rejects, or escalates at the limit |
 | `cancel` | `reason` | Cancels an active workflow at the user's request |
+
+The starting commit is captured once by `init` and preserved across implementation
+commits, rejection loops and session recovery. Before every review, `evidence`
+returns `committedDiff` from that commit to current HEAD, separate `stagedDiff`
+and `unstagedDiff` patches, and `untrackedFiles` names. The orchestrator supplies
+all patches and reads the listed untracked files for the reviewer. Committing work
+does not remove it from review scope. Evidence collection does not modify state.
+If a legacy workflow lacks a starting commit, or that commit is unavailable, stop
+and recover or explicitly restart with the user; never guess the baseline.
 
 Verdicts must be `APPROVED` with no issues, or `REJECTED` with issue strings in
 `file:line — required fix` format. Files changed during review cause verdict

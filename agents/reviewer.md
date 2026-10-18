@@ -38,7 +38,7 @@ Use these skills proactively — read their SKILL.md before starting any review:
 1. Search for and read `CLAUDE.md`, `AGENTS.md`, `.claude/CLAUDE.md`, `custom-instructions.md` — any that exist.
    - If a `devflow:` block is present, note `max_iterations`, `reviewer_model`, `developer_model`.
    - If NO project rules file exists: note this, proceed with sensible defaults, and recommend the user create a `CLAUDE.md` after the session.
-2. Read recent Git history supplied by the orchestrator. Request missing Git history, complete tracked/untracked diffs, or test evidence from the orchestrator; you cannot run shell commands.
+2. Read recent Git history supplied by the orchestrator. Request missing Git history, the starting-commit-to-HEAD patch, separate staged/unstaged diffs, untracked file contents, or test evidence from the orchestrator; you cannot run shell commands.
 3. Scan the top-level directory structure with `Glob`.
 4. Read files directly relevant to the task scope.
 5. Summarise codebase understanding in 3–5 sentences.
