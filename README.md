@@ -28,8 +28,16 @@ challenge the implementation before you accept it.
 
 ## Quick start
 
-**Requires:** Node.js 18+, Git with an initial commit, and Claude Code with plugin
-and agent tools available.
+**Requires:** Node.js 18+, Git with an initial commit in your project, and your
+chosen coding agent with plugins and separate-agent delegation available.
+
+Choose your integration:
+[Claude Code](#claude-code) ·
+[Codex CLI and app](#codex-cli-and-app-experimental) ·
+[Copilot CLI and VS Code](#github-copilot-cli-and-vs-code-experimental) ·
+[Antigravity App and CLI](#antigravity-app-and-cli-experimental).
+
+### Claude Code
 
 Inside Claude Code:
 
@@ -38,24 +46,91 @@ Inside Claude Code:
 /plugin install patchduo@patchduo
 ```
 
-If Claude Code requests it, run `/reload-plugins`. Start a new session in your
-project, then describe a task:
+If requested, run `/reload-plugins`, then start a new session in your project.
+For explicit control, use `/patchduo:reviewer [scope]` or
+`/patchduo:developer [instruction]`. For source development, run
+`claude --plugin-dir .` from the checkout.
+
+### Build packages for the other agents
+
+The Codex, Copilot, and Antigravity adapters are **experimental candidates**.
+Their installation steps are available for testing; model-driven automatic
+activation and delegation remain unverified on those surfaces.
+
+Build their local packages once:
+
+```sh
+git clone https://github.com/Tushar-Banswal/patchDuo.git
+cd patchDuo
+npm run build
+```
+
+This creates `dist/codex`, `dist/copilot`, and `dist/antigravity`, along with
+local marketplace catalogs. In the commands below, replace
+`/absolute/path/to/patchDuo` with your checkout's absolute path. Keep the generated
+distribution available while it is used by a local installation.
+
+### Codex CLI and app (experimental)
+
+Register the generated marketplace, install PatchDuo, and register its agents:
+
+```sh
+codex plugin marketplace add /absolute/path/to/patchDuo/dist
+codex plugin add patchduo@patchduo-codex
+node /absolute/path/to/patchDuo/dist/codex/bin/patchduo.js setup --host codex
+```
+
+In Codex, open `/hooks` and complete the host's trust review for PatchDuo before
+starting a fresh session. Agent setup honors `CODEX_HOME`, otherwise `~/.codex`.
+
+For the **Codex app**, open the registered marketplace in the plugin browser and
+install PatchDuo there. Run the same one-time agent setup command for that app's
+active Codex home and complete its hook trust review.
+
+### GitHub Copilot CLI and VS Code (experimental)
+
+Install the generated package:
+
+```sh
+copilot plugin install /absolute/path/to/patchDuo/dist/copilot
+```
+
+For **VS Code**, install the same source with `/plugin install` in the Copilot
+harness or through its plugin browser. Enable the host's hook feature and grant
+workspace trust where required. Open a fresh session in your project.
+
+The package supplies a session hook, a persistent activation rule, and separate
+`patchduo-reviewer` and `patchduo-developer` agents.
+
+### Antigravity App and CLI (experimental)
+
+Validate and install the generated package:
+
+```sh
+agy plugin validate /absolute/path/to/patchDuo/dist/antigravity
+agy plugin install /absolute/path/to/patchDuo/dist/antigravity
+```
+
+For the **Antigravity App**, select that package folder in App Customizations.
+Its always-active rule loads PatchDuo on the first model invocation of a new
+main-agent session. Antigravity IDE is outside the current integration targets.
+
+### Try your first task
+
+After installation, start a fresh session in a Git project and describe a task:
 
 ```text
 Fix the pagination bug in the users endpoint.
 Keep the response format unchanged and add regression coverage.
 ```
 
-PatchDuo activates through the session hook. The reviewer plans first, the
-developer implements, and the reviewer checks the result. No project configuration
-file or per-task slash command is required.
+The intended workflow is reviewer planning, developer implementation, and reviewer
+validation. No project configuration file or per-task slash command is required.
+For experimental adapters, verify the actual agent calls using the
+[live acceptance procedure](docs/verification.md#live-acceptance-procedure).
 
-Prefer explicit control? Use `/patchduo:reviewer [scope]` or
-`/patchduo:developer [instruction]`.
-
-For source development: clone this repository and run `claude --plugin-dir .`
-from the checkout. See the [installation guide](docs/installation.md) for updating,
-disabling, uninstalling, and installing other host packages.
+See the [full installation guide](docs/installation.md) for updating, disabling,
+uninstalling, permissions, and host-specific setup details.
 
 ## How it works
 
@@ -104,10 +179,10 @@ The five checklist skills are `clean-code`, `security`, `architectural`,
 
 | Host | Activation | Current status |
 | --- | --- | --- |
-| Claude Code | SessionStart hook | Existing integration; automated regression coverage |
-| Codex CLI and app | SessionStart hook and one-time agent registration | Experimental candidate; live verification pending |
-| GitHub Copilot CLI and VS Code | Native hook and persistent rule | Experimental candidate; live verification pending |
-| Antigravity App and CLI | Always-active plugin rule | Experimental candidate; live verification pending |
+| [Claude Code](#claude-code) | SessionStart hook | Existing integration; automated regression coverage |
+| [Codex CLI and app](#codex-cli-and-app-experimental) | SessionStart hook and one-time agent registration | Experimental candidate; live verification pending |
+| [GitHub Copilot CLI and VS Code](#github-copilot-cli-and-vs-code-experimental) | Native hook and persistent rule | Experimental candidate; live verification pending |
+| [Antigravity App and CLI](#antigravity-app-and-cli-experimental) | Always-active plugin rule | Experimental candidate; live verification pending |
 
 The new adapters have packaging and runtime tests. Automatic activation and
 actual agent delegation still require live acceptance checks on each advertised
