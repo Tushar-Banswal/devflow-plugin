@@ -21,7 +21,11 @@ function location(cwd) {
 function fingerprint(root) {
   const hash = crypto.createHash("sha256");
   hash.update(git(["rev-parse", "HEAD"], root));
-  hash.update(git(["diff", "HEAD", "--binary", "--no-ext-diff", "--no-textconv", "--"], root));
+  for (const args of [["diff", "--cached", "HEAD"], ["diff"]]) {
+    const diff = git([...args, "--binary", "--no-ext-diff", "--no-textconv", "--"], root);
+    hash.update(`${diff.length}:`);
+    hash.update(diff);
+  }
   const names = git(["ls-files", "--others", "--exclude-standard", "-z"], root).toString().split("\0").filter(Boolean).sort();
   for (const name of names) {
     const file = path.join(root, name);
