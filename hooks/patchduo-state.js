@@ -150,7 +150,7 @@ if (require.main === module) {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Input must be a JSON object");
     process.stdout.write(JSON.stringify(execute(process.argv[2], input, process.cwd())) + "\n");
   } catch (error) {
-    process.stderr.write(`DevFlow state error: ${error.message}\n`);
+    process.stderr.write(`PatchDuo state error: ${error.message}\n`);
     process.exitCode = 1;
   }
 }

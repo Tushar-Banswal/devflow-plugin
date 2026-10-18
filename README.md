@@ -1,176 +1,229 @@
-# DevFlow — Multi-Agent Development and Review
+<div align="center">
 
-DevFlow adds a structured **REVIEWER → DEVELOPER → REVIEWER** workflow to the AI
-coding agent you already use. Install it once at user scope: it activates
-automatically in every new session, without a slash command or repository setup.
+# PatchDuo
 
-The REVIEWER plans and audits; the DEVELOPER implements the brief and fixes review
-issues. Both run as genuine separate agents. The shared state helper tracks
-implementation passes, bounds rejection loops, and binds approval to the reviewed
-Git snapshot.
+### Give your AI coding agent a reviewer.
 
-## Integrations and installation
+A developer agent writes the code. A reviewer agent checks it.
+A tracked review loop brings them together inside the coding tools you already use.
 
-| Host | Automatic activation | Status |
-| --- | --- | --- |
-| Claude Code | SessionStart hook | Existing integration; shared-runtime regression tests |
-| Codex CLI/app | SessionStart hook; one-time user agent registration | Candidate; live verification pending |
-| Copilot CLI/VS Code | Native hook and persistent plugin rule | Candidate; live verification pending |
-| Antigravity App/CLI | Always-active plugin rule | Candidate; live verification pending |
-| Antigravity IDE, hosted/cloud agents | — | Outside this release |
+[![Tests and packaging](https://github.com/Tushar-Banswal/devflow-plugin/actions/workflows/test.yml/badge.svg)](https://github.com/Tushar-Banswal/devflow-plugin/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js: 18+](https://img.shields.io/badge/Node.js-18%2B-339933.svg)](package.json)
 
-Node.js ≥18 is required. The implementation loop needs Git with an initial commit;
-non-Git workspaces support analysis only. Host authentication, model access, trust,
-and permission settings remain in control. In particular, Codex requires its
-normal one-time hook trust review before plugin hooks run.
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Integrations](#integrations) · [Contribute](#contribute)
 
-See [installation instructions](docs/installation.md) for each host's install,
-update, disable, and uninstall flow. Prepare all local packages with:
+</div>
 
-```sh
-npm test
-npm run build
-```
+AI can write a patch quickly. Deciding whether that patch respects your architecture,
+handles edge cases, and stays within scope takes another pass.
 
-The generated `dist/` contains independent host packages and local marketplaces.
-Public publishing is a separate release action. A host is not fully supported
-until actual automatic activation and delegation pass the
-[live acceptance procedure](docs/verification.md).
+PatchDuo adds that pass to your development workflow. A separate **REVIEWER**
+analyzes your task and writes an implementation brief. A **DEVELOPER** implements
+it. The reviewer then checks the changes and returns specific fixes or approval.
+The loop continues until approval or your configured iteration limit.
 
-### Existing Claude Code installation
+Use it for bug fixes, features, and refactors where you want a second agent to
+challenge the implementation before you accept it.
+
+## Quick start
+
+**Requires:** Node.js 18+, Git with an initial commit, and Claude Code with plugin
+and agent tools available.
+
+Inside Claude Code:
 
 ```text
 /plugin marketplace add Tushar-Banswal/devflow-plugin
-/plugin install devflow@devflow
+/plugin install patchduo@patchduo
 ```
 
-For development from this checkout: `claude --plugin-dir .`.
-`/devflow:reviewer [scope]` and `/devflow:developer [instruction]` remain available
-for explicit requests. They are not required to activate DevFlow.
+If Claude Code requests it, run `/reload-plugins`. Start a new session in your
+project, then describe a task:
 
-## Session behavior
+```text
+Fix the pagination bug in the users endpoint.
+Keep the response format unchanged and add regression coverage.
+```
 
-- Each new session gets a brief activation notice once. Activation alone creates
-  no workflow, asks for no empty goal, and edits no project files.
-- Ordinary questions receive ordinary answers. A development task automatically
-  enters the reviewer-led workflow using the task the user supplied.
-- An active workflow is recovered before onboarding. Resume and compaction retain
-  its goal, brief, issues, configuration, phase, and implementation counter.
-- Missing delegation or unsupported model selections stop the implementation loop
-  visibly. DevFlow never substitutes role-playing or another model silently.
-- Disabling the plugin stops automatic activation. Workflow state remains intact.
+PatchDuo activates through the session hook. The reviewer plans first, the
+developer implements, and the reviewer checks the result. No project configuration
+file or per-task slash command is required.
 
-## Workflow
+Prefer explicit control? Use `/patchduo:reviewer [scope]` or
+`/patchduo:developer [instruction]`.
 
-1. Read project configuration and recover any active workflow.
-2. REVIEWER reads applicable project rules and code, resolves critical ambiguities,
-   and writes an implementation brief with acceptance and validation criteria.
-3. DEVELOPER implements the brief and applies the clean-code checklist.
-4. The orchestrator gathers complete changes and test evidence. REVIEWER audits
-   security, architecture, system design, and engineering trade-offs.
-5. Record APPROVED or REJECTED. Rejection returns numbered fixes to DEVELOPER;
-   reaching `max_iterations` escalates instead of silently extending the loop.
+For source development: clone this repository and run `claude --plugin-dir .`
+from the checkout. See the [installation guide](docs/installation.md) for updating,
+disabling, uninstalling, and installing other host packages.
 
-The reviewer has a read/search/web tool allowlist in Claude, Copilot, and
-Antigravity. Codex reviewer restrictions are instructions, not a separate sandbox;
-Codex subagents inherit parent permissions. Review evidence and project rules are
-explicitly passed to each fresh agent. Host-specific details live in `lib/hosts.js`;
-the protocol, role sources, checklists, and state engine are shared.
+## How it works
 
-## Optional configuration
+```mermaid
+flowchart LR
+    Task[Your task] --> Plan[Reviewer: analyze and plan]
+    Plan --> Build[Developer: implement and self-review]
+    Build --> Review[Reviewer: inspect changes and evidence]
+    Review -->|Approved| Result[Report the result]
+    Review -->|Changes needed| Limit{Passes remaining?}
+    Limit -->|Yes| Build
+    Limit -->|No| User[Return blockers to you]
+```
 
-No configuration file is required. To customize a project, add root
-`devflow.config.json`:
+The orchestrator coordinates the agents and gathers Git diffs and test evidence.
+Each fresh agent receives the task, brief, constraints, and previous review issues.
+
+**Illustrative workflow — not a recorded benchmark:**
+
+```text
+You        Fix pagination without changing the API response.
+Reviewer   Inspect the endpoint; define scope and validation.
+Developer  Implement the fix and regression coverage.
+Reviewer   REJECTED — the final-page boundary still needs a fix.
+Developer  Fix the flagged boundary case.
+Reviewer   APPROVED — summarize the reviewed changes and validation.
+```
+
+## What you get
+
+| Capability | Why it matters |
+| --- | --- |
+| Separate planning, implementation, and review | The implementation gets another agent's scrutiny. |
+| A concrete implementation brief | Files, constraints, acceptance criteria, and exclusions stay explicit. |
+| Reusable review checklists | Review covers security, architecture, system design, and code quality. |
+| Bounded fix loops | Rejection escalates to you when the pass limit is reached. |
+| Persistent workflow state | Resume and compaction retain the goal, brief, issues, and pass count. |
+| Complete Git review scope | Committed, staged, unstaged, and untracked changes remain visible. |
+| Approval fingerprints | Changes during review invalidate the verdict; later changes make approval stale. |
+| Shared runtime and host adapters | Roles, configuration, checklists, and recovery share one implementation. |
+
+The five checklist skills are `clean-code`, `security`, `architectural`,
+`system-design`, and `senior-architect`. You can inspect them in [skills/](skills).
+
+## Integrations
+
+| Host | Activation | Current status |
+| --- | --- | --- |
+| Claude Code | SessionStart hook | Existing integration; automated regression coverage |
+| Codex CLI and app | SessionStart hook and one-time agent registration | Experimental candidate; live verification pending |
+| GitHub Copilot CLI and VS Code | Native hook and persistent rule | Experimental candidate; live verification pending |
+| Antigravity App and CLI | Always-active plugin rule | Experimental candidate; live verification pending |
+
+The new adapters have packaging and runtime tests. Automatic activation and
+actual agent delegation still require live acceptance checks on each advertised
+surface. Antigravity IDE and hosted/cloud agents are outside this release.
+
+See [installation](docs/installation.md) for host-specific setup and
+[verification](docs/verification.md) for the evidence required before a candidate
+is considered fully supported. Codex requires one-time profile registration and
+the host's hook trust review.
+
+## Configure your workflow
+
+Defaults use the session model for both roles and allow **five implementation
+passes**. To customize a project, add `patchduo.config.json` at its root:
 
 ```json
 {
-  "max_iterations": 5,
+  "max_iterations": 3,
   "reviewer_model": "default",
   "developer_model": "default"
 }
 ```
 
-Defaults are five implementation passes and the host's session model for both
-roles. Model identifiers are host-specific; non-default selections require a
-supported native override. Unsupported choices are reported before implementation.
+Model identifiers and available overrides depend on the host. Unsupported choices
+stop the implementation loop with an explanation.
 
-For compatibility, a flat `devflow:` block in root `CLAUDE.md`, then root
-`AGENTS.md`, is still supported:
+Configuration precedence is:
 
-```yaml
-devflow:
-  max_iterations: 5
-  reviewer_model: default
-  developer_model: default
+```text
+patchduo.config.json → devflow.config.json → CLAUDE.md block → AGENTS.md block → defaults
 ```
 
-Precedence is **JSON → CLAUDE.md → AGENTS.md → defaults**. Select the first
-available configuration source as a whole; settings are not merged across files.
-JSON must be an object with only the three known keys. The legacy block accepts
-two-space indentation, quoted/bare scalars, and comments; it is not general YAML.
-Invalid configuration fails visibly. Limits must be positive safe integers.
+The first available source wins as a whole. Configuration is captured when a
+workflow starts; editing it during that workflow does not reset its limit or models.
+Both `patchduo:` and legacy `devflow:` blocks remain supported. See the
+[configuration parser](lib/config.js) for supported fields and validation.
 
-Configuration is captured when a workflow starts; editing it cannot reset an
-active workflow's limit or models. Preset models win independently over onboarding
-preferences. Only default entries ask for preferences when starting a task.
+## Upgrading from DevFlow
 
-## State and recovery
+PatchDuo is the new name for DevFlow. Install with `patchduo@patchduo` and use
+`/patchduo:reviewer` and `/patchduo:developer`. The GitHub repository URL stays
+`Tushar-Banswal/devflow-plugin`, so existing links continue to work.
 
-State lives at Git's per-worktree `devflow/state.json` metadata path, outside
-commits. One worktree has one active workflow shared across sessions and hosts.
-Do not run concurrent orchestrators against it. Linked worktrees are independent.
-State retains the goal, `startingHead`, brief, models, phase, iteration, and latest
-review issues across sessions and hosts.
+Existing `devflow.config.json` files and `devflow:` blocks still work.
+`patchduo.config.json` takes precedence over the old JSON filename; within each
+rules file, `patchduo:` takes precedence over `devflow:`. Active workflow state
+keeps its existing storage path, goal, baseline, configuration, and iteration.
 
-Run the packaged `hooks/devflow-state.js` from the target project. Each command
-takes a JSON object on stdin (`{}` for commands without fields) and returns JSON.
-`status` also accepts empty stdin.
+Disable or uninstall the old DevFlow plugin before enabling PatchDuo to avoid
+running both orchestrators. For Codex, use the old package's
+`node bin/devflow.js uninstall --host codex` before removing it, then register
+the new PatchDuo profiles. The new setup preserves separately owned DevFlow files.
 
-| Command | Input | Effect |
-| --- | --- | --- |
-| `config` | `{}` | Read validated project configuration |
-| `status` | `{}` | Read state, null, or stale approval |
-| `evidence` | `{}` | Starting/current commits, committed/staged/unstaged patches, and untracked file names |
-| `init` | `goal`, optional model preferences | Begin planning; preserve active workflows |
-| `brief` | `brief` | Record the implementation brief |
-| `implement` | `{}` | Count and begin one implementation pass |
-| `review` | `{}` | Capture the review snapshot |
-| `refresh-review` | `{}` | Capture changes and require a complete new review |
-| `verdict` | `result`, `summary`, `issues` | Approve, reject, or escalate at the limit |
-| `cancel` | `reason` | Cancel only at the user's request |
+## Recovery and review evidence
 
-The starting commit is captured once by `init` and preserved across implementation
-commits, rejection loops and session recovery. Before every review, `evidence`
-returns `committedDiff` from that commit to current HEAD, separate `stagedDiff`
-and `unstagedDiff` patches, and `untrackedFiles` names. The orchestrator supplies
-all patches and reads the listed untracked files for the reviewer. Committing work
-does not remove it from review scope. Evidence collection does not modify state.
-If a legacy workflow lacks a starting commit, or that commit is unavailable, stop
-and recover or explicitly restart with the user; never guess the baseline.
+State stays at Git's per-worktree `devflow/state.json` metadata path for
+compatibility with existing workflows, outside commits. Each worktree has one active workflow; linked worktrees are independent.
+Sessions and hosts using the same worktree share its state.
 
-Verdicts use `APPROVED` with no issues, or `REJECTED` with issue strings in
-`file:line — required fix` format. Files changed during review invalidate verdict
-submission. Later changes make approval stale. Interrupted implementation resumes
-its existing pass without incrementing again.
+PatchDuo records the starting commit once. Before review, the `evidence` command
+returns changes committed since that point, separate staged and unstaged patches,
+and untracked file names. Committing implementation work does not remove it from
+review scope. Resume and compaction preserve the baseline.
 
-Writes use a lock and atomic replacement. Conflicting writers fail visibly. After
-a crash, confirm no helper remains before removing only `state.json.lock`; preserve
-the state file. Never edit state manually to bypass failed transitions.
+Approval is checked against a fingerprint of HEAD, staged and unstaged changes,
+and non-ignored untracked files. The orchestrator must pass complete evidence and
+invoke the agents and helper correctly. Ignored files, submodule working-tree
+contents, and external systems are outside that fingerprint.
 
-Approval fingerprints cover HEAD, tracked changes, and non-ignored untracked
-files. Ignored files, submodule working-tree contents, and external systems are
-outside the fingerprint. DevFlow is an assisted workflow; it does not intercept
-every edit, shell command, commit, or merge.
+For helper commands, phase transitions, and recovery rules, read the
+[workflow protocol](lib/workflow.md) and [state helper](hooks/patchduo-state.js).
+If a crash leaves a lock, confirm no helper process remains before removing only
+`state.json.lock`; preserve the state file.
 
-## Development and validation
+## FAQ
 
-`npm test` uses Node's dependency-free test runner. `npm run build` generates
-relocatable host artifacts from the shared sources; it does not install anything
-into the developer's coding agents. GitHub Actions runs tests and packaging on
-Node 18, 20, 22, and 24.
+**Does PatchDuo replace human review?**  
+It adds an assisted review loop. It does not guarantee correctness or intercept
+every edit, command, commit, or merge. You remain responsible for accepting changes.
 
-See [verification](docs/verification.md) for automated coverage and required live
-checks. Generated packages keep `releaseReady: false` until live evidence is
-recorded. No fixture result is presented as a live host check.
+**Does it use a separate model service?**  
+It uses the host's authentication, models, and tools. Review and fix passes add
+model requests, so usage depends on your host, chosen models, and iteration count.
 
-MIT — see [LICENSE](LICENSE).
+**Can the reviewer edit files?**  
+Claude, Copilot, and Antigravity reviewer definitions restrict tools to reading,
+search, and web access. Codex reviewer restrictions are instructions; its agents
+inherit parent permissions rather than receiving a separate read-only sandbox.
+
+**Will it start coding when I ask a question?**  
+Ordinary questions receive ordinary answers. Development tasks enter the tracked
+review workflow.
+
+## Contribute
+
+Useful contributions include reproducible bugs, focused regression tests,
+checklist improvements, and recorded live host verification.
+
+- [Report a bug](https://github.com/Tushar-Banswal/devflow-plugin/issues/new) with your host version, OS, reproduction steps, and relevant output.
+- Test an experimental adapter using the [live acceptance procedure](docs/verification.md) and share the actual agent/tool traces.
+- Propose a change in an issue before building a large feature.
+
+To run the automated checks and build the host packages:
+
+```sh
+git clone https://github.com/Tushar-Banswal/devflow-plugin.git
+cd devflow-plugin
+npm test
+npm run build
+```
+
+The runtime and test suite declare no external npm dependencies. Packages are
+generated in `dist/` from shared sources. CI runs tests and builds on Node 18,
+20, 22, and 24. Generated packages retain `releaseReady: false` pending live
+verification.
+
+## License
+
+[MIT](LICENSE) · Created by [Tushar Banswal](https://github.com/Tushar-Banswal).

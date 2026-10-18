@@ -24,6 +24,9 @@ package and agents, not automatic activation or live delegation.
 
 ## Checks recorded for this implementation
 
+The following checks were recorded under the previous DevFlow name, before the
+PatchDuo rename. Repeat native installation and live checks for the renamed packages.
+
 On October 16, 2026, Linux with Node 24.21.0:
 
 - The automated suite passed all 22 behavioral tests.
@@ -48,10 +51,12 @@ Antigravity App and CLI separately. A passing CLI check does not certify its GUI
 
 1. Install once at user scope using the installation guide. Complete the host's
    normal hook trust review and Codex profile setup if applicable. Use two clean,
-   unrelated Git repositories with initial commits and no DevFlow config files.
+   unrelated Git repositories with initial commits and no PatchDuo config files.
 2. Open a new session in repository A. Ask an ordinary question. Confirm a single
    activation notice, no onboarding questions for an empty goal, no implementation
-   workflow, no repository edits, and no newly created Git DevFlow state directory.
+   workflow, no repository edits, and no newly created Git `devflow/` metadata
+   directory. Resolve its location with `git rev-parse --git-path devflow/state.json`;
+   PatchDuo retains this legacy path for upgrade compatibility.
 3. Open another new session in A, then a new session in B. Confirm automatic
    activation each time without a command, repository instructions, or reinstall.
 4. Supply a small development task. Verify actual separate REVIEWER and DEVELOPER
@@ -62,12 +67,12 @@ Antigravity App and CLI separately. A passing CLI check does not certify its GUI
 6. Interrupt implementation, resume, and compact. Verify the same goal, brief,
    issues, captured configuration, and iteration survive. No repeated onboarding
    or compaction notice; startup in a new session still gets one activation notice.
-7. Request an unavailable model or disable delegation. Verify DevFlow reports the
+7. Request an unavailable model or disable delegation. Verify PatchDuo reports the
    limitation before implementation, with no replacement model or role-playing.
 8. Change a file after approval. Verify approval is stale. Run two linked worktrees
    and confirm their workflow state remains independent.
-9. Disable DevFlow using the host's controls. Open a fresh session: no automatic
-   DevFlow activation. Enable it and open another: activation returns and active
+9. Disable PatchDuo using the host's controls. Open a fresh session: no automatic
+   PatchDuo activation. Enable it and open another: activation returns and active
    workflow state is recovered.
 10. Update the plugin, refresh Codex registrations if applicable, and repeat the
     startup check. Uninstall, clean up owned Codex profiles, and confirm existing
