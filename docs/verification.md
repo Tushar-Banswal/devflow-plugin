@@ -54,7 +54,9 @@ Antigravity App and CLI separately. A passing CLI check does not certify its GUI
    unrelated Git repositories with initial commits and no PatchDuo config files.
 2. Open a new session in repository A. Ask an ordinary question. Confirm a single
    activation notice, no onboarding questions for an empty goal, no implementation
-   workflow, no repository edits, and no newly created Git PatchDuo state directory.
+   workflow, no repository edits, and no newly created Git `devflow/` metadata
+   directory. Resolve its location with `git rev-parse --git-path devflow/state.json`;
+   PatchDuo retains this legacy path for upgrade compatibility.
 3. Open another new session in A, then a new session in B. Confirm automatic
    activation each time without a command, repository instructions, or reinstall.
 4. Supply a small development task. Verify actual separate REVIEWER and DEVELOPER

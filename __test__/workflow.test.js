@@ -270,3 +270,30 @@ test("evidence refuses missing or unavailable baselines without changing state",
     assert.equal(fs.readFileSync(file, "utf8"), before);
   }
 });
+
+
+test("configuration errors identify the selected current or legacy rules block", (t) => {
+  const root = fixture(t);
+  for (const name of ["CLAUDE.md", "AGENTS.md"]) {
+    const file = path.join(root, name);
+    for (const brand of ["patchduo", "devflow"]) {
+      for (const settings of [
+        "  max_iterations 2",
+        "  unknown: true",
+        "  max_iterations: 2\n  max_iterations: 3",
+      ]) {
+        fs.writeFileSync(file, `${brand}:\n${settings}\n`);
+        assert.throws(() => readConfig(root), (error) => {
+          assert.ok(error.message.startsWith(`Invalid or duplicate ${brand} setting in ${name}:`));
+          return true;
+        });
+      }
+    }
+    fs.writeFileSync(file, "devflow:\n  unknown: true\n\npatchduo:\n  max_iterations: 2\n  max_iterations: 3\n");
+    assert.throws(() => readConfig(root), (error) => {
+      assert.ok(error.message.startsWith(`Invalid or duplicate patchduo setting in ${name}:`));
+      return true;
+    });
+    fs.rmSync(file);
+  }
+});
