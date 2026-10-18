@@ -1,175 +1,143 @@
-# DevFlow — Multi-Agent Dev/Review Workflow
+# DevFlow — Multi-Agent Development and Review
 
-> A structured **REVIEWER → DEVELOPER** workflow that brings senior engineering rigour to every coding task.
-> Provides a **REVIEWER** (Senior Engineer) and a **DEVELOPER** (Mid-level Engineer) that collaborate through an assisted review loop to identify security, architecture, and code quality issues.
+DevFlow adds a structured **REVIEWER → DEVELOPER → REVIEWER** workflow to the AI
+coding agent you already use. Install it once at user scope: it activates
+automatically in every new session, without a slash command or repository setup.
 
-> **Current implementation:** Claude Code plugin. Support for GitHub Copilot, Codex, and other coding agents is planned.
+The REVIEWER plans and audits; the DEVELOPER implements the brief and fixes review
+issues. Both run as genuine separate agents. The shared state helper tracks
+implementation passes, bounds rejection loops, and binds approval to the reviewed
+Git snapshot.
 
----
+## Integrations and installation
 
-## How it works
+| Host | Automatic activation | Status |
+| --- | --- | --- |
+| Claude Code | SessionStart hook | Existing integration; shared-runtime regression tests |
+| Codex CLI/app | SessionStart hook; one-time user agent registration | Candidate; live verification pending |
+| Copilot CLI/VS Code | Native hook and persistent plugin rule | Candidate; live verification pending |
+| Antigravity App/CLI | Always-active plugin rule | Candidate; live verification pending |
+| Antigravity IDE, hosted/cloud agents | — | Outside this release |
 
-When DevFlow is active, the orchestrator follows this workflow:
+Node.js ≥18 is required. The implementation loop needs Git with an initial commit;
+non-Git workspaces support analysis only. Host authentication, model access, trust,
+and permission settings remain in control. In particular, Codex requires its
+normal one-time hook trust review before plugin hooks run.
 
-1. **The orchestrator reads configuration**, restores any active workflow, and asks model preferences only for unset/default entries
-2. **The orchestrator uses your supplied task**, asking for a goal only when needed
-3. **REVIEWER** scans the codebase, reads your project rules file (`CLAUDE.md` / `AGENTS.md` / equivalent), asks clarifying questions, then writes a precise implementation brief
-4. **DEVELOPER** implements the brief with minimum footprint, self-reviews with the clean-code skill, and reports back
-5. **REVIEWER** audits all changes against security, architectural, system-design, and senior-architect checklists — returns **APPROVED** or **REJECTED** with numbered issues
-6. A persistent workflow helper validates transitions, counts implementation passes, and stops rejection loops at `max_iterations` (default: 5)
+See [installation instructions](docs/installation.md) for each host's install,
+update, disable, and uninstall flow. Prepare all local packages with:
 
-The helper binds approval to HEAD, tracked changes, and non-ignored untracked
-files. Later changes make approval stale. The orchestrator must invoke the helper
-and agents correctly; DevFlow does not intercept every edit, command, commit or
-merge and is not a repository-wide enforcement gate. Ignored files, submodule
-working-tree contents, and external systems are outside the approval fingerprint.
+```sh
+npm test
+npm run build
+```
 
----
+The generated `dist/` contains independent host packages and local marketplaces.
+Public publishing is a separate release action. A host is not fully supported
+until actual automatic activation and delegation pass the
+[live acceptance procedure](docs/verification.md).
 
-## Agents
+### Existing Claude Code installation
 
-| Agent | Role | Persona |
-|-------|------|---------|
-| **REVIEWER** | Plans, clarifies, and audits | Senior Engineer — read-only, thinks in systems, security-first |
-| **DEVELOPER** | Implements | Mid-level Engineer — minimum footprint, asks before guessing |
-
----
-
-## Prerequisites
-
-- **Node.js ≥ 18** — required for activation and workflow state
-- **Git with an initial commit** — required for the tracked implementation loop; non-Git projects support analysis only
-- **Claude Code** — the plugin runs inside Claude Code sessions
-
----
-
-## Installation
-
-### Claude Code (current)
-
-Add the marketplace and install the plugin in two commands from within Claude Code:
-
-```shell
+```text
 /plugin marketplace add Tushar-Banswal/devflow-plugin
 /plugin install devflow@devflow
 ```
 
-If prompted, run:
+For development from this checkout: `claude --plugin-dir .`.
+`/devflow:reviewer [scope]` and `/devflow:developer [instruction]` remain available
+for explicit requests. They are not required to activate DevFlow.
 
-```shell
-/reload-plugins
+## Session behavior
+
+- Each new session gets a brief activation notice once. Activation alone creates
+  no workflow, asks for no empty goal, and edits no project files.
+- Ordinary questions receive ordinary answers. A development task automatically
+  enters the reviewer-led workflow using the task the user supplied.
+- An active workflow is recovered before onboarding. Resume and compaction retain
+  its goal, brief, issues, configuration, phase, and implementation counter.
+- Missing delegation or unsupported model selections stop the implementation loop
+  visibly. DevFlow never substitutes role-playing or another model silently.
+- Disabling the plugin stops automatic activation. Workflow state remains intact.
+
+## Workflow
+
+1. Read project configuration and recover any active workflow.
+2. REVIEWER reads applicable project rules and code, resolves critical ambiguities,
+   and writes an implementation brief with acceptance and validation criteria.
+3. DEVELOPER implements the brief and applies the clean-code checklist.
+4. The orchestrator gathers complete changes and test evidence. REVIEWER audits
+   security, architecture, system design, and engineering trade-offs.
+5. Record APPROVED or REJECTED. Rejection returns numbered fixes to DEVELOPER;
+   reaching `max_iterations` escalates instead of silently extending the loop.
+
+The reviewer has a read/search/web tool allowlist in Claude, Copilot, and
+Antigravity. Codex reviewer restrictions are instructions, not a separate sandbox;
+Codex subagents inherit parent permissions. Review evidence and project rules are
+explicitly passed to each fresh agent. Host-specific details live in `lib/hosts.js`;
+the protocol, role sources, checklists, and state engine are shared.
+
+## Optional configuration
+
+No configuration file is required. To customize a project, add root
+`devflow.config.json`:
+
+```json
+{
+  "max_iterations": 5,
+  "reviewer_model": "default",
+  "developer_model": "default"
+}
 ```
 
-#### Dev / Test (one session, no install)
+Defaults are five implementation passes and the host's session model for both
+roles. Model identifiers are host-specific; non-default selections require a
+supported native override. Unsupported choices are reported before implementation.
 
-Run this from the **parent directory** of `devflow-plugin/`:
-
-```shell
-claude --plugin-dir ./devflow-plugin
-```
-
-### GitHub Copilot / Codex *(coming soon)*
-
-Support for additional coding agents is planned. Watch this repo for updates.
-
----
-
-## Usage
-
-### Automatic activation
-
-DevFlow loads on startup, resume, clear, and compaction. On a fresh workflow it
-announces activation, reads configuration, and resolves model preferences. Resume
-and compaction restore the recorded phase, brief, issues and iteration without
-repeating onboarding. An existing task is used immediately.
-
-Both manual commands explicitly delegate through the Agent tool to the scoped
-`devflow:reviewer` and `devflow:developer` agents. The reviewer has only Read, Grep,
-Glob and WebSearch: the orchestrator supplies Git history, diffs and test evidence.
-Plugin agents omit unsupported `permissionMode` fields. The developer command
-requires a reviewer brief and continues through validation and review.
-
-### Manual invocation
-
-| Command | Effect |
-|---------|--------|
-| `/devflow:reviewer` | Invoke REVIEWER (codebase scan, clarification, or code review) |
-| `/devflow:reviewer [scope]` | REVIEWER focused on specific files or area |
-| `/devflow:developer` | Invoke DEVELOPER (implement per REVIEWER's brief) |
-| `/devflow:developer [instruction]` | DEVELOPER with additional instruction |
-
----
-
-## Configuration
-
-Add a `devflow:` block inside your project's `CLAUDE.md` or `AGENTS.md` file to customise behaviour:
+For compatibility, a flat `devflow:` block in root `CLAUDE.md`, then root
+`AGENTS.md`, is still supported:
 
 ```yaml
 devflow:
-  max_iterations: 5         # Max DEVELOPER → REVIEWER loops (default: 5)
-  reviewer_model: default   # Model for REVIEWER ('default' = session model)
-  developer_model: default  # Model for DEVELOPER
+  max_iterations: 5
+  reviewer_model: default
+  developer_model: default
 ```
 
-The supported configuration is a flat block with two-space indentation, bare or
-quoted scalar values, and optional comments, as shown above. `max_iterations`
-must be a positive safe integer; duplicate/unknown keys and malformed values fail
-visibly. This is a deliberately limited parser, not a general YAML loader.
+Precedence is **JSON → CLAUDE.md → AGENTS.md → defaults**. Select the first
+available configuration source as a whole; settings are not merged across files.
+JSON must be an object with only the three known keys. The legacy block accepts
+two-space indentation, quoted/bare scalars, and comments; it is not general YAML.
+Invalid configuration fails visibly. Limits must be positive safe integers.
 
-The first block found in root `CLAUDE.md`, then root `AGENTS.md`, wins as a whole.
-Each explicitly set model takes precedence independently. Only entries set to
-`default` prompt for a preference; leaving one at default inherits the session
-model. The orchestrator passes non-default choices explicitly during delegation.
-If the installed Agent tool cannot honor a choice, it must report the limitation
-before proceeding. Host model restrictions still apply.
+Configuration is captured when a workflow starts; editing it cannot reset an
+active workflow's limit or models. Preset models win independently over onboarding
+preferences. Only default entries ask for preferences when starting a task.
 
-Configuration is captured when a workflow starts. Editing it during an active
-workflow does not reset that workflow's iteration limit or selected models.
+## State and recovery
 
----
+State lives at Git's per-worktree `devflow/state.json` metadata path, outside
+commits. One worktree has one active workflow shared across sessions and hosts.
+Do not run concurrent orchestrators against it. Linked worktrees are independent.
+State retains the goal, `startingHead`, brief, models, phase, iteration, and latest
+review issues across sessions and hosts.
 
-## Skills included
+Run the packaged `hooks/devflow-state.js` from the target project. Each command
+takes a JSON object on stdin (`{}` for commands without fields) and returns JSON.
+`status` also accepts empty stdin.
 
-| Skill | Used by | Purpose |
-|-------|---------|---------|
-| `devflow:clean-code` | DEVELOPER | Self-review checklist after every implementation |
-| `devflow:security` | REVIEWER | OWASP-aligned security audit (auth, injection, secrets, data handling) |
-| `devflow:architectural` | REVIEWER | SOLID, dependency direction, coupling, layer separation |
-| `devflow:system-design` | REVIEWER | Scalability, DB quality, reliability, caching, observability |
-| `devflow:senior-architect` | REVIEWER | Trade-off analysis, blast radius, final APPROVE/REJECT gate |
-
----
-
-## Workflow state and recovery
-
-State lives at Git's per-worktree `devflow/state.json` path under its Git metadata,
-so it stays out of commits and linked worktrees have independent state. Run one
-workflow per worktree; sessions in the same worktree share the active goal.
-State contains the goal, starting commit (`startingHead`), brief, models, iteration
-and latest review issues. The
-orchestrator passes that context to every new agent, which has no conversation
-history by default.
-
-The helper is `hooks/devflow-state.js`. Run it from the target project with a
-command argument and a JSON object on stdin; output is JSON. Use `{}` when no
-input fields are needed. For example, from this plugin checkout:
-
-```sh
-node hooks/devflow-state.js status < /dev/null
-```
-
-| Command | Input | Result |
-|---------|-------|--------|
-| `config` | `{}` | Validated project configuration |
-| `status` | `{}` | Recorded state, `null`, or stale approval |
+| Command | Input | Effect |
+| --- | --- | --- |
+| `config` | `{}` | Read validated project configuration |
+| `status` | `{}` | Read state, null, or stale approval |
 | `evidence` | `{}` | Starting/current commits, committed/staged/unstaged patches, and untracked file names |
-| `init` | `goal`, optional model preferences | Starts planning; refuses to reset an active workflow |
-| `brief` | `brief` | Records the implementation brief |
-| `implement` | `{}` | Starts and counts one implementation pass |
-| `review` | `{}` | Captures the current changes for review |
-| `refresh-review` | `{}` | Captures changed files; requires a fresh complete review |
-| `verdict` | `result`, `summary`, `issues` | Approves, rejects, or escalates at the limit |
-| `cancel` | `reason` | Cancels an active workflow at the user's request |
+| `init` | `goal`, optional model preferences | Begin planning; preserve active workflows |
+| `brief` | `brief` | Record the implementation brief |
+| `implement` | `{}` | Count and begin one implementation pass |
+| `review` | `{}` | Capture the review snapshot |
+| `refresh-review` | `{}` | Capture changes and require a complete new review |
+| `verdict` | `result`, `summary`, `issues` | Approve, reject, or escalate at the limit |
+| `cancel` | `reason` | Cancel only at the user's request |
 
 The starting commit is captured once by `init` and preserved across implementation
 commits, rejection loops and session recovery. Before every review, `evidence`
@@ -180,50 +148,29 @@ does not remove it from review scope. Evidence collection does not modify state.
 If a legacy workflow lacks a starting commit, or that commit is unavailable, stop
 and recover or explicitly restart with the user; never guess the baseline.
 
-Verdicts must be `APPROVED` with no issues, or `REJECTED` with issue strings in
-`file:line — required fix` format. Files changed during review cause verdict
-submission to fail. Approval becomes stale when the fingerprint changes later.
+Verdicts use `APPROVED` with no issues, or `REJECTED` with issue strings in
+`file:line — required fix` format. Files changed during review invalidate verdict
+submission. Later changes make approval stale. Interrupted implementation resumes
+its existing pass without incrementing again.
 
-Writes use a lock and atomic replacement. A conflicting writer fails visibly.
-If a process crashes while holding the lock, confirm no helper process remains
-before removing only `state.json.lock` beside the state file; preserve the state.
-An interrupted implementation resumes its existing pass without incrementing.
+Writes use a lock and atomic replacement. Conflicting writers fail visibly. After
+a crash, confirm no helper remains before removing only `state.json.lock`; preserve
+the state file. Never edit state manually to bypass failed transitions.
 
-## Testing
+Approval fingerprints cover HEAD, tracked changes, and non-ignored untracked
+files. Ignored files, submodule working-tree contents, and external systems are
+outside the fingerprint. DevFlow is an assisted workflow; it does not intercept
+every edit, shell command, commit, or merge.
 
-```sh
-npm test
-```
+## Development and validation
 
-The dependency-free Node test runner exercises configuration, persistent state,
-rejection/fix loops, iteration exhaustion, malformed verdicts, changed snapshots,
-session recovery, worktree isolation, lock conflicts and packaging. GitHub Actions
-runs these checks on Node 18, 20, 22 and 24.
+`npm test` uses Node's dependency-free test runner. `npm run build` generates
+relocatable host artifacts from the shared sources; it does not install anything
+into the developer's coding agents. GitHub Actions runs tests and packaging on
+Node 18, 20, 22, and 24.
 
-These tests do not run a live Claude session. Follow
-[`__test__/expected_output.txt`](__test__/expected_output.txt) for the manual
-integration scenarios, including actual delegation and model selection.
-
-## Updating
-
-To pull the latest version:
-
-```shell
-/plugin marketplace update devflow
-```
-
----
-
-## Roadmap
-
-- [x] Claude Code plugin
-- [ ] GitHub Copilot integration
-- [ ] Codex / OpenAI Codex CLI integration
-- [ ] Configurable agent personas
-- [ ] Custom skill support via project rules file
-
----
-
-## License
+See [verification](docs/verification.md) for automated coverage and required live
+checks. Generated packages keep `releaseReady: false` until live evidence is
+recorded. No fixture result is presented as a live host check.
 
 MIT — see [LICENSE](LICENSE).
