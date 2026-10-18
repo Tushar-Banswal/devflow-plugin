@@ -58,11 +58,11 @@ Ask these before writing the verdict:
 
 | Criterion | Check |
 |-----------|-------|
-| `devflow:security` — no blocking issues | ✅ / ✗ |
-| `devflow:architectural` — no violations | ✅ / ✗ |
-| `devflow:system-design` — no scalability red flags | ✅ / ✗ |
+| `patchduo:security` — no blocking issues | ✅ / ✗ |
+| `patchduo:architectural` — no violations | ✅ / ✗ |
+| `patchduo:system-design` — no scalability red flags | ✅ / ✗ |
 | CLAUDE.md / AGENTS.md project rules — fully compliant | ✅ / ✗ |
-| `devflow:clean-code` — REVIEWER independently applied checklist to all changed files | ✅ / ✗ |
+| `patchduo:clean-code` — REVIEWER independently applied checklist to all changed files | ✅ / ✗ |
 | Minimum change principle — no scope creep | ✅ / ✗ |
 | All clarifying questions answered before implementation | ✅ / ✗ |
 | Trade-off decisions are justified | ✅ / ✗ |

@@ -8,9 +8,9 @@ const { registerCodex } = require("../lib/setup");
 function main(args) {
   const [command, ...options] = args;
   if (!command || command === "--help") {
-    return "DevFlow\n  context --host HOST     Read activation context (JSON metadata on stdin)\n" +
+    return "PatchDuo\n  context --host HOST     Read activation context (JSON metadata on stdin)\n" +
       "  setup --host codex [--dry-run]      Register user-level Codex agents\n" +
-      "  uninstall --host codex [--dry-run]  Remove unchanged DevFlow-owned profiles\n";
+      "  uninstall --host codex [--dry-run]  Remove unchanged PatchDuo-owned profiles\n";
   }
   let host;
   let dryRun = false;
@@ -32,7 +32,7 @@ function main(args) {
 
 if (require.main === module) {
   try { process.stdout.write(main(process.argv.slice(2))); }
-  catch (error) { process.stderr.write(`DevFlow error: ${error.message}\n`); process.exitCode = 1; }
+  catch (error) { process.stderr.write(`PatchDuo error: ${error.message}\n`); process.exitCode = 1; }
 }
 
 module.exports = { main };

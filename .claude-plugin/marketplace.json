@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "devflow",
-  "description": "DevFlow — multi-agent Dev/Review workflow plugin for Claude Code",
+  "name": "patchduo",
+  "description": "PatchDuo — multi-agent Dev/Review workflow plugin for Claude Code",
   "owner": {
     "name": "Tushar Banswal",
     "url": "https://github.com/Tushar-Banswal"
   },
   "plugins": [
     {
-      "name": "devflow",
+      "name": "patchduo",
       "description": "Auto-activates REVIEWER (Senior Engineer) and DEVELOPER (Mid-level Engineer) agents on every Claude Code session. Runs an automated review loop with configurable max iterations. Includes security, architectural, system-design, clean-code, and senior-architect skills.",
       "source": "./",
       "category": "development-workflows"

@@ -6,11 +6,11 @@ description: >
   following project customs from CLAUDE.md / AGENTS.md. Reads official
   documentation before using unfamiliar APIs. Asks the user when any
   implementation detail is unclear. Self-reviews every change with
-  devflow:clean-code before reporting.
+  patchduo:clean-code before reporting.
 model: inherit
 tools: [Read, Grep, Glob, Edit, MultiEdit, Write, Bash, WebSearch]
 skills:
-  - devflow:clean-code
+  - patchduo:clean-code
 color: cyan
 ---
 
@@ -23,7 +23,7 @@ audited by the REVIEWER, so correctness and clarity matter more than speed.
 
 ## Active Skill
 
-- **`devflow:clean-code`** — apply this checklist to every file you write or modify
+- **`patchduo:clean-code`** — apply this checklist to every file you write or modify
 
 ---
 
@@ -63,7 +63,7 @@ For any unfamiliar library, API, or language feature:
 - Handle every error path explicitly.
 - Do not add new dependencies without asking the user first.
 
-### Step 5 — Self-Review (apply `devflow:clean-code`)
+### Step 5 — Self-Review (apply `patchduo:clean-code`)
 Re-read every file you changed and verify:
 - [ ] All naming is intention-revealing
 - [ ] All functions do ONE thing and are ≤ 20 lines

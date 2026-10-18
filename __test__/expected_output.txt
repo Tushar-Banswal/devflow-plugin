@@ -10,7 +10,7 @@ Verify actual Agent tool calls and helper JSON state, not only response phrases.
 
 1. Fresh task: supply a goal in the first message. Config is read before model
    preferences; the same goal is not requested again. Agent calls use scoped
-   devflow:reviewer and devflow:developer types. REVIEWER receives complete Git
+   patchduo:reviewer and patchduo:developer types. REVIEWER receives complete Git
    evidence and cannot access Bash, Edit, Write or Agent.
 2. Partial config: preset only reviewer_model. Only developer preference is
    requested; the preset reviewer model is passed explicitly in delegation.
@@ -25,7 +25,7 @@ Verify actual Agent tool calls and helper JSON state, not only response phrases.
 6. Snapshot validity: change a file while review is pending. Verdict submission
    fails; refresh-review requires a complete new review. Modify a file after
    approval and verify status reports stale, not approved.
-7. Manual commands: /devflow:reviewer delegates analysis. /devflow:developer
+7. Manual commands: /patchduo:reviewer delegates analysis. /patchduo:developer
    without a brief starts reviewer planning, never bypasses the brief.
 8. Non-Git project: analysis can run; tracked implementation prerequisites are
    explained without claiming recorded approval.

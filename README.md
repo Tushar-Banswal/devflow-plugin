@@ -1,6 +1,6 @@
 <div align="center">
 
-# DevFlow
+# PatchDuo
 
 ### Give your AI coding agent a reviewer.
 
@@ -18,7 +18,7 @@ A tracked review loop brings them together inside the coding tools you already u
 AI can write a patch quickly. Deciding whether that patch respects your architecture,
 handles edge cases, and stays within scope takes another pass.
 
-DevFlow adds that pass to your development workflow. A separate **REVIEWER**
+PatchDuo adds that pass to your development workflow. A separate **REVIEWER**
 analyzes your task and writes an implementation brief. A **DEVELOPER** implements
 it. The reviewer then checks the changes and returns specific fixes or approval.
 The loop continues until approval or your configured iteration limit.
@@ -35,7 +35,7 @@ Inside Claude Code:
 
 ```text
 /plugin marketplace add Tushar-Banswal/devflow-plugin
-/plugin install devflow@devflow
+/plugin install patchduo@patchduo
 ```
 
 If Claude Code requests it, run `/reload-plugins`. Start a new session in your
@@ -46,12 +46,12 @@ Fix the pagination bug in the users endpoint.
 Keep the response format unchanged and add regression coverage.
 ```
 
-DevFlow activates through the session hook. The reviewer plans first, the
+PatchDuo activates through the session hook. The reviewer plans first, the
 developer implements, and the reviewer checks the result. No project configuration
 file or per-task slash command is required.
 
-Prefer explicit control? Use `/devflow:reviewer [scope]` or
-`/devflow:developer [instruction]`.
+Prefer explicit control? Use `/patchduo:reviewer [scope]` or
+`/patchduo:developer [instruction]`.
 
 For source development: clone this repository and run `claude --plugin-dir .`
 from the checkout. See the [installation guide](docs/installation.md) for updating,
@@ -121,7 +121,7 @@ the host's hook trust review.
 ## Configure your workflow
 
 Defaults use the session model for both roles and allow **five implementation
-passes**. To customize a project, add `devflow.config.json` at its root:
+passes**. To customize a project, add `patchduo.config.json` at its root:
 
 ```json
 {
@@ -137,21 +137,37 @@ stop the implementation loop with an explanation.
 Configuration precedence is:
 
 ```text
-devflow.config.json → CLAUDE.md devflow block → AGENTS.md devflow block → defaults
+patchduo.config.json → devflow.config.json → CLAUDE.md block → AGENTS.md block → defaults
 ```
 
 The first available source wins as a whole. Configuration is captured when a
 workflow starts; editing it during that workflow does not reset its limit or models.
-Legacy `devflow:` blocks remain supported. See the
+Both `patchduo:` and legacy `devflow:` blocks remain supported. See the
 [configuration parser](lib/config.js) for supported fields and validation.
+
+## Upgrading from DevFlow
+
+PatchDuo is the new name for DevFlow. Install with `patchduo@patchduo` and use
+`/patchduo:reviewer` and `/patchduo:developer`. The GitHub repository URL stays
+`Tushar-Banswal/devflow-plugin`, so existing links continue to work.
+
+Existing `devflow.config.json` files and `devflow:` blocks still work.
+`patchduo.config.json` takes precedence over the old JSON filename; within each
+rules file, `patchduo:` takes precedence over `devflow:`. Active workflow state
+keeps its existing storage path, goal, baseline, configuration, and iteration.
+
+Disable or uninstall the old DevFlow plugin before enabling PatchDuo to avoid
+running both orchestrators. For Codex, use the old package's
+`node bin/devflow.js uninstall --host codex` before removing it, then register
+the new PatchDuo profiles. The new setup preserves separately owned DevFlow files.
 
 ## Recovery and review evidence
 
-State lives in Git's per-worktree `devflow/state.json` metadata path, outside
-commits. Each worktree has one active workflow; linked worktrees are independent.
+State stays at Git's per-worktree `devflow/state.json` metadata path for
+compatibility with existing workflows, outside commits. Each worktree has one active workflow; linked worktrees are independent.
 Sessions and hosts using the same worktree share its state.
 
-DevFlow records the starting commit once. Before review, the `evidence` command
+PatchDuo records the starting commit once. Before review, the `evidence` command
 returns changes committed since that point, separate staged and unstaged patches,
 and untracked file names. Committing implementation work does not remove it from
 review scope. Resume and compaction preserve the baseline.
@@ -162,13 +178,13 @@ invoke the agents and helper correctly. Ignored files, submodule working-tree
 contents, and external systems are outside that fingerprint.
 
 For helper commands, phase transitions, and recovery rules, read the
-[workflow protocol](lib/workflow.md) and [state helper](hooks/devflow-state.js).
+[workflow protocol](lib/workflow.md) and [state helper](hooks/patchduo-state.js).
 If a crash leaves a lock, confirm no helper process remains before removing only
 `state.json.lock`; preserve the state file.
 
 ## FAQ
 
-**Does DevFlow replace human review?**  
+**Does PatchDuo replace human review?**  
 It adds an assisted review loop. It does not guarantee correctness or intercept
 every edit, command, commit, or merge. You remain responsible for accepting changes.
 

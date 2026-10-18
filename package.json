@@ -1,5 +1,5 @@
 {
-  "name": "devflow-plugin",
+  "name": "patchduo-plugin",
   "version": "1.2.0",
   "description": "Automatically activated REVIEWER -> DEVELOPER workflow for AI coding agents",
   "author": "Tushar Banswal",
